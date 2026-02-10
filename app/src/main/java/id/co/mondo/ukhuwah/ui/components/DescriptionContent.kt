@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 
 @Composable
-fun DescriptionContent(
+fun SimpleDescriptionContent(
     title: String,
     items: List<String>
 ) {
@@ -38,8 +38,6 @@ fun DescriptionContent(
             }
         }
     }
-
-
 }
 
 @Composable
@@ -59,6 +57,7 @@ fun BulletText(text: String) {
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewDescContent() {
@@ -66,14 +65,13 @@ fun PreviewDescContent() {
         Column(
             Modifier.fillMaxSize()
         ) {
-            DescriptionContent(
+            SimpleDescriptionContent(
                 title = "Deskripsi",
                 items = listOf(
                     "Deskripsi \n 1",
                     "Deskripsi 2",
                     "Deskripsi 3"
                 )
-
             )
         }
     }

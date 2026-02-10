@@ -1,7 +1,7 @@
 package id.co.mondo.ukhuwah.data.supabase
 
 import android.util.Log
-import id.co.mondo.ukhuwah.data.model.Account
+import id.co.mondo.ukhuwah.data.dto.AccountDto
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 
@@ -20,9 +20,22 @@ class AuthService {
         } catch (e: Exception) {
             Result.failure(e)
         }
-
-
     }
+
+
+    suspend fun updateEmail(email: String): Result<Unit> {
+        return try {
+            supabase.auth.updateUser {
+                this.email = email
+            }
+            Log.d("AuthService", "Update email berhasil")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("AuthService", "Update email GAGAL: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
 
 
     suspend fun restoreSession(): Boolean {
@@ -40,7 +53,7 @@ class AuthService {
     suspend fun register(
         email: String,
         password: String,
-    ): Result<Account> {
+    ): Result<AccountDto> {
         return try {
             supabase.auth.signUpWith(Email) {
                 this.email = email.trim()
@@ -58,7 +71,7 @@ class AuthService {
             Log.d("UserService", "Email user ditemukan: $emailUser")
 
             Result.success(
-                Account(
+                AccountDto(
                     id = authUserId,
                     email = emailUser
                 )
@@ -100,21 +113,5 @@ class AuthService {
         }
     }
 
-    suspend fun updateUser(email: String): Result<Unit> {
-        return try {
-            supabase.auth.updateUser {
-                this.email = email
-            }
-            Log.d("AuthService", "Update user berhasil")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(
-                "AuthService",
-                "Update user GAGAL: ${e.message}",
-                e
-            )
-            Result.failure(e)
-        }
-    }
 
 }

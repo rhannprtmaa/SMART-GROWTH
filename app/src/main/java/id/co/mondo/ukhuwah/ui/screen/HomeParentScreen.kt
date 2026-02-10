@@ -12,17 +12,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,20 +32,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import id.co.mondo.ukhuwah.data.model.Article
+import id.co.mondo.ukhuwah.data.model.MpasiGuideList
 import id.co.mondo.ukhuwah.data.model.menuItemsParent
-import id.co.mondo.ukhuwah.data.utils.getAvailableMonthsByYear
+import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.ArticleItemCard
 import id.co.mondo.ukhuwah.ui.components.CardChild
+import id.co.mondo.ukhuwah.ui.components.CardMpasiGuide
+import id.co.mondo.ukhuwah.ui.components.EmptyChildCard
 import id.co.mondo.ukhuwah.ui.components.HeaderParent
-import id.co.mondo.ukhuwah.ui.components.MpasiItemCard
 import id.co.mondo.ukhuwah.ui.components.NavItemCard
+import id.co.mondo.ukhuwah.ui.screen.health.MpasGuideDetailDialog
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
+import id.co.mondo.ukhuwah.ui.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,58 +61,47 @@ fun HomeParentScreen(
 
     val context = LocalContext.current
 
-    var showDialog by remember { mutableStateOf(false) }
+    val viewmodel: UserViewModel = viewModel()
+    val state by viewmodel.userProfileState.collectAsState()
 
-    val selectedYear = "2026"
-    val monthList = remember(selectedYear) {
-        getAvailableMonthsByYear(selectedYear)
+    var showDialog by remember { mutableStateOf(false)}
+    var selectedMpasiGuide by remember { mutableIntStateOf(0) }
+
+
+    val articles = Article.entries
+
+    LaunchedEffect(Unit) {
+        viewmodel.getProfileUser()
     }
-    var selectedMonth by remember { mutableStateOf(monthList.first()) }
 
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+    }
 
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = {
-                Text(
-                    text = "Konfirmasi",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            text = {
-                Text(text = "Yakinki mau Keluar?")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDialog = false
-//                        authViewModel.logout()
-                    }
-                ) {
-                    Text(
-                        text = "Keluar",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    )
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog = false }
-                ) {
-                    Text(
-                        text = "Kembali",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    )
-                }
+    val user = when (state) {
+        is UiState.Success -> (state as UiState.Success).data
+        else -> null
+    }
+
+    if (showDialog && selectedMpasiGuide != 0) {
+        MpasGuideDetailDialog(
+            data = MpasiGuideList.first { it.id == selectedMpasiGuide },
+            onDismiss = {
+                showDialog = false
+                selectedMpasiGuide = 0
             }
         )
     }
+
+
 
 
     LazyColumn(
@@ -115,6 +111,7 @@ fun HomeParentScreen(
         contentPadding = contentPadding,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         item {
             Box(
                 modifier = Modifier
@@ -136,11 +133,12 @@ fun HomeParentScreen(
                     )
                 ) {
                     HeaderParent(
+                        name = user?.name ?: "",
                         onClickNotification = {
                             navController.navigate("notification")
                         },
                         onClickProfile = {
-                            showDialog = true
+
                         }
                     )
                     Text(
@@ -167,8 +165,15 @@ fun HomeParentScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(10) {
-                        CardChild()
+                    val child = user?.children ?: emptyList()
+                    if (child.isEmpty()) {
+                        item {
+                            EmptyChildCard()
+                        }
+                    } else {
+                        items(child) { child ->
+                            CardChild(child = child)
+                        }
                     }
                 }
                 Row(
@@ -196,7 +201,7 @@ fun HomeParentScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Rekomendasi untuk Anda",
+                        text = "Panduan MPASI",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 12.sp,
                         ),
@@ -209,19 +214,13 @@ fun HomeParentScreen(
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(4) {
-                            MpasiItemCard(
-                                navController = navController,
-                                modifier = Modifier
-                                    .width(250.dp),
-                                fontTitle = MaterialTheme.typography.titleMedium.copy(
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                fontBody = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 10.sp
-                                )
+                        items(MpasiGuideList) { item ->
+                            CardMpasiGuide(
+                                item = item,
+                                onClick = {
+                                    selectedMpasiGuide = item.id
+                                    showDialog = true
+                                }
                             )
                         }
                     }
@@ -230,7 +229,7 @@ fun HomeParentScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Rekomendasi untuk Anda",
+                        text = "Artikel Kesehatan",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 12.sp,
                         ),
@@ -243,13 +242,14 @@ fun HomeParentScreen(
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(4) {
+                        items(articles) { article ->
                             ArticleItemCard(
                                 modifier = Modifier
                                     .size(
                                         width = 225.dp,
                                         height = 200.dp
-                                    )
+                                    ),
+                                item = article
                             )
                         }
                     }

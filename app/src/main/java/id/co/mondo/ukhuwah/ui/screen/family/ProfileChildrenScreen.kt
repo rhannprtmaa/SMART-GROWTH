@@ -1,7 +1,9 @@
 package id.co.mondo.ukhuwah.ui.screen.family
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,8 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,7 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import id.co.mondo.ukhuwah.data.model.Children
+import id.co.mondo.ukhuwah.data.model.ProfileChild
+import id.co.mondo.ukhuwah.data.model.UpdateProfileChild
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.GenderField
@@ -44,18 +50,20 @@ fun ProfileChildrenScreen(
     contentPadding: PaddingValues
 ) {
 
+    val context = LocalContext.current
+
     val childViewModel: ChildViewModel = viewModel()
     val state by childViewModel.childId.collectAsState()
+    val updateState by childViewModel.updateChildId.collectAsState()
 
 
     var name by remember { mutableStateOf("") }
     var nik by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
     var birthDate by remember { mutableStateOf("") }
-    var tb by remember { mutableStateOf(0.0) }
-    var bb by remember { mutableStateOf(0.0) }
-    var lk by remember { mutableStateOf(0.0) }
-    var lila by remember { mutableStateOf(0.0) }
+    var tb by remember { mutableStateOf("") }
+    var bb by remember { mutableStateOf("") }
+    var lk by remember { mutableStateOf("") }
 
     var isEditMode by remember { mutableStateOf(false) }
     var enabled by remember { mutableStateOf(false) }
@@ -66,17 +74,52 @@ fun ProfileChildrenScreen(
     }
 
     LaunchedEffect(state) {
-        if (state is UiState.Success) {
-            val child = (state as UiState.Success<Children>).data
-            Log.d("ProfileChildrenScreen", "Child: $child")
-            name = child.name.orEmpty()
-            nik = child.nik.orEmpty()
-            gender = child.gender.orEmpty()
-            birthDate = child.birth.orEmpty()
-            tb = child.heightCm ?: 0.0
-            bb = child.weightKg ?: 0.0
-            lk = child.armCm ?: 0.0
-            lila = child.headCm ?: 0.0
+        when (state) {
+            is UiState.Success -> {
+                val child = (state as UiState.Success<ProfileChild>).data
+                Log.d("ProfileChildrenScreen", "Child: $child")
+                name = child.name
+                nik = child.nik.orEmpty()
+                gender = child.gender
+                birthDate = child.birth
+                tb = child.heightCm.toString()
+                bb = child.weightKg.toString()
+                lk = child.headCm.toString()
+            }
+
+            is UiState.Error -> {
+                Toast.makeText(
+                    context,
+                    (state as UiState.Error).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> Unit
+
+        }
+    }
+
+    LaunchedEffect(updateState) {
+        if (updateState is UiState.Success) {
+            Toast.makeText(
+                context,
+                "Data berhasil diupdate",
+                Toast.LENGTH_SHORT
+            ).show(
+            )
+        }
+    }
+
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
     }
 
@@ -97,16 +140,15 @@ fun ProfileChildrenScreen(
                     onClick = {
                         val nikValue = nik.ifBlank { null }
                         childViewModel.updateChild(
-                            Children(
+                            UpdateProfileChild(
                                 id = id,
                                 name = name,
                                 nik = nikValue,
                                 gender = gender,
                                 birth = birthDate,
-                                heightCm = tb,
-                                weightKg = bb,
-                                armCm = lk,
-                                headCm = lila
+                                heightCm = tb.toDouble(),
+                                weightKg = bb.toDouble(),
+                                headCm = lk.toDouble()
                             )
                         )
                         enabled = false
@@ -220,20 +262,20 @@ fun ProfileChildrenScreen(
                 ) {
                     TextFieldCustom(
                         modifier = Modifier.weight(1f),
-                        values = tb.toString(),
+                        values = tb,
                         label = "TB",
                         onValueChange = {
-                            tb = it.toDouble()
+                            tb = it
                         },
                         keyboardType = KeyboardType.Decimal,
                         enabled = enabled
                     )
                     TextFieldCustom(
                         modifier = Modifier.weight(1f),
-                        values = bb.toString(),
+                        values = bb,
                         label = "BB",
                         onValueChange = {
-                            bb = it.toDouble()
+                            bb = it
                         },
                         keyboardType = KeyboardType.Decimal,
                         enabled = enabled
@@ -245,35 +287,16 @@ fun ProfileChildrenScreen(
                 ) {
                     TextFieldCustom(
                         modifier = Modifier.weight(1f),
-                        values = lk.toString(),
+                        values = lk,
                         label = "LK",
                         onValueChange = {
-                            lk = it.toDouble()
-                        },
-                        keyboardType = KeyboardType.Decimal,
-                        enabled = enabled
-                    )
-                    TextFieldCustom(
-                        modifier = Modifier.weight(1f),
-                        values = lila.toString(),
-                        label = "LiLA",
-                        onValueChange = {
-                            lila = it.toDouble()
+                            lk = it
                         },
                         keyboardType = KeyboardType.Decimal,
                         enabled = enabled
                     )
                 }
             }
-//            Spacer(Modifier.height(20.dp))
-//            ButtonCustom(
-//                modifier = Modifier.fillMaxWidth(),
-//                label = "Simpan Perubahan",
-//                onClick = {
-//
-//                },
-//                enabled = enabled
-//            )
         }
     }
 }

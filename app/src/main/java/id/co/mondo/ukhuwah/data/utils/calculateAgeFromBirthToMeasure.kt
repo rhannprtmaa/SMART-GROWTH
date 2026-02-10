@@ -8,12 +8,13 @@ import java.time.Period
 fun calculateAgeFromBirthToMeasure(
     birth: String,
     measuredAt: String
-): AgeResult? {
+): AgeResult {
     Log.d("calculateAge", "birth: $birth, measuredAt: $measuredAt")
 
     // 1️⃣ Cegah crash (WAJIB)
-    if (birth.isBlank() || measuredAt.isBlank()) return null
-    if (birth == "-" || measuredAt == "-") return null
+    if (birth.isBlank() || measuredAt.isBlank()) return AgeResult(0, 0, 0)
+    if (birth == "-" || measuredAt == "-") return AgeResult(0, 0, 0)
+
 
     // 2️⃣ Ambil tanggal saja (aman untuk timestamp)
     val birthDate = LocalDate.parse(birth)

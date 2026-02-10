@@ -6,9 +6,11 @@ import java.time.Period
 
 fun calculateAgeFromBirthToNow(
     birth: String
-): AgeResult? {
+): AgeResult {
 
-    if (birth.isBlank() || birth == "-") return null
+    if (birth.isNullOrBlank() || birth == "-") {
+        return AgeResult(0, 0, 0)
+    }
 
     val birthDate = LocalDate.parse(birth.take(10))
     val today = LocalDate.now()

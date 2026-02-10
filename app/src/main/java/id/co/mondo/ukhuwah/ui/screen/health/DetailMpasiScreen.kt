@@ -16,6 +16,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -26,161 +29,195 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import id.co.mondo.ukhuwah.R
+import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
-import id.co.mondo.ukhuwah.ui.components.DescriptionContent
 import id.co.mondo.ukhuwah.ui.components.NutritionContent
+import id.co.mondo.ukhuwah.ui.components.SimpleDescriptionContent
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
+import id.co.mondo.ukhuwah.ui.viewmodel.HealthViewModel
 
 @Composable
 fun DetailMpasiScreen(
     navController: NavController,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
+    id: Int
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-    ) {
-        AppTopBar(
-            title = "Resep Detail",
-            showBack = true,
-            onBackClick = {
-                navController.popBackStack()
-            }
-        )
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            item {
-                Image(
-                    painter = painterResource(R.drawable.bubur),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                        .height(200.dp)
-                        .shadow(8.dp, RoundedCornerShape(percent = 25))
+
+    val viewModel: HealthViewModel = viewModel()
+    val recipeByIdState by viewModel.recipeByIdState.collectAsState()
+
+    LaunchedEffect(id) {
+        viewModel.getRecipeById(id)
+    }
+
+    when (recipeByIdState) {
+        is UiState.Loading -> {
+
+        }
+
+        is UiState.Error -> {
+
+        }
+
+        is UiState.Success -> {
+            val item = (recipeByIdState as UiState.Success).data
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+            ) {
+                AppTopBar(
+                    title = "Resep Detail",
+                    showBack = true,
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
                 )
-            }
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    Column(
-                        Modifier
-                            .weight(1F),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "Sop Bola Udang",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            )
+                    item {
+                        Image(
+                            painter = painterResource(R.drawable.bubursotoayamsantan),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .height(200.dp)
+                                .shadow(8.dp, RoundedCornerShape(percent = 25))
                         )
+                    }
+                    item {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                )
+                            )
+                        }
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.babyface),
-                                contentDescription = null,
-                                tint = Pink4,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "12 Bulan ke atas",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 12.sp
-                                ),
-                                color = Color.Gray
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.babyface),
+                                    contentDescription = null,
+                                    tint = Pink4,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = item.age,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 12.sp
+                                    ),
+                                    color = Color.Gray
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.eye),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "-",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 12.sp
+                                        )
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.favorite),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "-",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 12.sp
+                                        )
+                                    )
+                                }
+                                Icon(
+                                    painter = painterResource(R.drawable.bookmark),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
                     }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.eye),
-                                contentDescription = null,
-                                tint = Pink4,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = "100", style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 12.sp
-                                )
+
+                    item {
+                        SimpleDescriptionContent(
+                            title = "Bahan",
+                            items = item.recipeIngredients
+                        )
+                    }
+                    if (item.recipeSpices.isNotEmpty()) {
+                        item {
+                            SimpleDescriptionContent(
+                                title = "Bumbu",
+                                items = item.recipeSpices
                             )
                         }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.favorite),
-                                contentDescription = null,
-                                tint = Pink4,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = "100", style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 12.sp
-                                )
-                            )
-                        }
-                        Icon(
-                            painter = painterResource(R.drawable.bookmark),
-                            contentDescription = null,
-                            tint = Pink4,
-                            modifier = Modifier.size(24.dp)
+
+                    }
+                    item {
+                        SimpleDescriptionContent(
+                            title = "Cara Membuat",
+                            items = item.recipeSteps
+                        )
+                    }
+                    item {
+                        SimpleDescriptionContent(
+                            title = "Buah",
+                            items = item.fruits
+                        )
+                    }
+                    item {
+                        NutritionContent(
+                            nutritions = item.nutritions
                         )
                     }
                 }
             }
-            item {
-                DescriptionContent(
-                    title = "Bahan",
-                    items = listOf(
-                        "Deskripsi \n 1",
-                        "Deskripsi 2",
-                        "Deskripsi 3"
-                    )
-                )
-            }
-            item {
-                DescriptionContent(
-                    title = "Cara Membuat",
-                    items = listOf(
-                        "Deskripsi \n 1",
-                        "Deskripsi 2",
-                        "Deskripsi 3"
-                    )
-                )
-            }
-            item {
-                NutritionContent(
-                    energi = "100",
-                    karbo = "100",
-                    lemak = "100",
-                    protein = "100",
-                    zatBesi = "100",
-                    zinc = "100"
-                )
-            }
         }
+
+        else -> Unit
     }
 }
 
@@ -190,7 +227,8 @@ fun PreviewDetailMpasiScreen() {
     Innovillage6thTheme {
         DetailMpasiScreen(
             navController = rememberNavController(),
-            contentPadding = PaddingValues()
+            contentPadding = PaddingValues(),
+            id = 1
         )
     }
 }

@@ -15,20 +15,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import id.co.mondo.ukhuwah.data.model.Nutritions
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.abu
 
 @Composable
 fun NutritionContent(
-    energi: String,
-    karbo: String,
-    lemak: String,
-    protein: String,
-    zatBesi: String,
-    zinc: String
-){
+    nutritions: Nutritions
+) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp),
     ) {
         Text(
             text = "Kandungan Per Porsi",
@@ -37,12 +35,36 @@ fun NutritionContent(
             )
         )
         Spacer(Modifier.height(12.dp))
-        NutritionItem(name = "Energi", value = "$energi kkal", isGray = true)
-        NutritionItem(name = "Karbohidrat", value = "$karbo gr", isGray = false)
-        NutritionItem(name = "Lemak", value = "$lemak gr", isGray = true)
-        NutritionItem(name = "Protein", value = "$protein gr", isGray = false)
-        NutritionItem(name = "Zat besi", value = "$zatBesi mg", isGray = true)
-        NutritionItem(name = "Zinc", value = "$zinc mg", isGray = false)
+        NutritionItem(
+            name = "Energi",
+            value = if (nutritions.energi == 0.0) "-" else "${nutritions.energi} kkal",
+            isGray = true
+        )
+        NutritionItem(
+            name = "Karbohidrat",
+            value = if (nutritions.karbo == 0.0) "-" else "${nutritions.karbo} g",
+            isGray = false
+        )
+        NutritionItem(
+            name = "Lemak",
+            value = if (nutritions.lemak == 0.0) "-" else "${nutritions.lemak} g",
+            isGray = true
+        )
+        NutritionItem(
+            name = "Protein",
+            value = if (nutritions.protein == 0.0) "-" else "${nutritions.protein} g",
+            isGray = false
+        )
+        NutritionItem(
+            name = "Zat besi",
+            value = if (nutritions.zatBesi == 0.0) "-" else "${nutritions.zatBesi} mg",
+            isGray = true
+        )
+        NutritionItem(
+            name = "Zinc",
+            value = if (nutritions.zinc == 0.0) "-" else "${nutritions.zinc} mg",
+            isGray = false
+        )
     }
 }
 
@@ -51,7 +73,7 @@ fun NutritionItem(
     name: String,
     value: String,
     isGray: Boolean
-){
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -76,16 +98,18 @@ fun NutritionItem(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewNutritionContent(){
+fun PreviewNutritionContent() {
     Innovillage6thTheme {
         Column {
             NutritionContent(
-                energi = "100",
-                karbo = "100",
-                lemak = "100",
-                protein = "100",
-                zatBesi = "100",
-                zinc = "100"
+                nutritions = Nutritions(
+                    energi = 100.0,
+                    karbo = 20.0,
+                    lemak = 30.0,
+                    protein = 40.0,
+                    zatBesi = 50.0,
+                    zinc = 60.0
+                )
             )
         }
     }

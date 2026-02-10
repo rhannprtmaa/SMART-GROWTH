@@ -26,12 +26,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.co.mondo.ukhuwah.data.model.AgeResult
-import id.co.mondo.ukhuwah.data.model.ChildWithMeasure
+import id.co.mondo.ukhuwah.data.model.ListMeasure
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 
 @Composable
 fun HistoryCard(
-    measure: ChildWithMeasure,
+    measure: ListMeasure,
     onClick: () -> Unit
 ) {
     ElevatedCard(
@@ -66,7 +66,7 @@ fun HistoryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = measure.measured_at.toString(),
+                    text = measure.measuredAt.toString(),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal
@@ -181,12 +181,11 @@ fun PreviewHistoryCard() {
                 onClick = {
 
                 },
-                measure = ChildWithMeasure(
-                    children_id = 1,
+                measure = ListMeasure(
+                    childrenId = 1,
                     name = "Rafiq",
-                    id = 1,
-                    birth = "12-12-2000",
-                    measured_at = "12-12-2023",
+                    measureId = 1,
+                    measuredAt = "12-12-2023",
                     heightCm = 160.0,
                     weightKg = 60.0,
                     armCm = 40.0,

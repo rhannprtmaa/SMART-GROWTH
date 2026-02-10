@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import id.co.mondo.ukhuwah.data.model.Children
+import id.co.mondo.ukhuwah.data.model.AllChild
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 
@@ -41,7 +41,7 @@ import id.co.mondo.ukhuwah.ui.theme.Pink4
 fun SelectChildren(
     selectedChild: String,
     onChildSelected: (Int) -> Unit,
-    children: List<Children>
+    children: List<AllChild>
 ) {
 
     var showDropdown by remember { mutableStateOf(false) }
@@ -129,7 +129,7 @@ fun SelectChildren(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = child.name ?: "-",
+                                text = child.name,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
@@ -137,7 +137,7 @@ fun SelectChildren(
                             )
                         },
                         onClick = {
-                            onChildSelected(child.id ?: -1)
+                            onChildSelected(child.id)
                             showDropdown = false
                         }
                     )
@@ -162,10 +162,11 @@ fun PreviewSelectChildren() {
                     selectedChild = id.toString()
                 },
                 children = listOf(
-                    Children(
-                        name = ""
-                    )
+                    AllChild(id = 1, name = "Anak 1", nik = "1234567890123456"),
+                    AllChild(id = 1, name = "Anak 1", nik = "1234567890123456"),
+                    AllChild(id = 1, name = "Anak 1", nik = "1234567890123456")
                 )
+
             )
         }
     }

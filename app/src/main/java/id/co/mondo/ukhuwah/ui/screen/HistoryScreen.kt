@@ -1,18 +1,18 @@
 package id.co.mondo.ukhuwah.ui.screen
 
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,15 +33,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import id.co.mondo.ukhuwah.data.model.ChildWithMeasure
+import id.co.mondo.ukhuwah.data.model.ListMeasure
+import id.co.mondo.ukhuwah.data.utils.getAvailableMonthsByYear
+import id.co.mondo.ukhuwah.data.utils.getAvailableYears
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
+import id.co.mondo.ukhuwah.ui.components.FilterDropdown
 import id.co.mondo.ukhuwah.ui.components.HistoryCard
 import id.co.mondo.ukhuwah.ui.components.SelectChildren
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HistoryScreen(
     navController: NavController,
@@ -50,15 +52,19 @@ fun HistoryScreen(
     val context = LocalContext.current
 
     val childViewModel: ChildViewModel = viewModel()
-    val measureWithChildState by childViewModel.allChildWithMeasureState.collectAsState()
-    val childState by childViewModel.childState.collectAsState()
+    val measureWithChildState by childViewModel.allListMeasureState.collectAsState()
+
+    val childState by childViewModel.allChildState.collectAsState()
 
 
-//    val currentDate = MonthYearUtils.currentYearMonth()
-//    var selectedDate by remember { mutableStateOf(currentDate) }
-//
-//    val yearList = MonthYearUtils.yearList(2024)
-//    val monthList = MonthYearUtils.monthList(selectedDate.year)
+    val yearList = remember {
+        getAvailableYears()
+    }
+    var selectedYear by remember { mutableStateOf(yearList.first()) }
+    val monthList = remember(selectedYear) {
+        getAvailableMonthsByYear(selectedYear)
+    }
+    var selectedMonth by remember { mutableStateOf(monthList.first()) }
 
 
     var selectedChild by remember { mutableStateOf(-1) }
@@ -66,7 +72,6 @@ fun HistoryScreen(
 
     LaunchedEffect(Unit) {
         childViewModel.getAllChildMeasure()
-        childViewModel.getAllChild()
     }
 
     val childrenForSelect = when (childState) {
@@ -98,35 +103,30 @@ fun HistoryScreen(
             children = childrenForSelect
         )
         Spacer(Modifier.height(12.dp))
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 20.dp),
-//            horizontalArrangement = Arrangement.spacedBy(8.dp)
-//        ) {
-//            FilterDropdown(
-//                selectedValue = MonthYearUtils.monthNames[selectedDate.monthValue - 1],
-//                items = monthList,
-//                onItemSelected = { month ->
-//                    selectedDate = selectedDate.withMonth(
-//                        MonthYearUtils.monthNames.indexOf(month) + 1
-//                    )
-//                },
-//                modifier = Modifier.weight(1f)
-//            )
-//            FilterDropdown(
-//                selectedValue = selectedDate.year.toString(),
-//                items = yearList.map { it.toString() },
-//                onItemSelected = { year ->
-//                    selectedDate = MonthYearUtils.resolveYearMonth(
-//                        selected = selectedDate,
-//                        newYear = year.toInt()
-//                    )
-//                },
-//                modifier = Modifier.width(150.dp)
-//            )
-//        }
-//        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterDropdown(
+                selectedValue = selectedMonth,
+                items = monthList,
+                onItemSelected = {
+                    selectedMonth = it
+                },
+                modifier = Modifier.weight(1f)
+            )
+            FilterDropdown(
+                selectedValue = selectedYear,
+                items = yearList,
+                onItemSelected = {
+                    selectedYear = it
+                },
+                modifier = Modifier.width(150.dp)
+            )
+        }
+        Spacer(Modifier.height(12.dp))
 
         when (measureWithChildState) {
             is UiState.Loading -> {
@@ -142,15 +142,14 @@ fun HistoryScreen(
             }
 
             is UiState.Success -> {
-                val children =
-                    (measureWithChildState as UiState.Success<List<ChildWithMeasure>>).data
+                val children = (measureWithChildState as UiState.Success<List<ListMeasure>>).data
                 Log.d("HistoryScreen", "Children: $children")
 
                 val filteredChildren = if (selectedChild == -1) {
                     children
                 } else {
                     children.filter {
-                        it.children_id == selectedChild
+                        it.childrenId == selectedChild
                     }
                 }
 
@@ -162,14 +161,16 @@ fun HistoryScreen(
                 ) {
                     items(filteredChildren) { measure ->
                         HistoryCard(
-                            measure = ChildWithMeasure(
+                            measure = ListMeasure(
+                                measureId = measure.measureId,
                                 name = measure.name,
-                                measured_at = measure.measured_at,
+                                measuredAt = measure.measuredAt,
                                 headCm = measure.headCm,
                                 weightKg = measure.weightKg,
                                 armCm = measure.armCm,
                                 heightCm = measure.heightCm,
-                                ageResult = measure.ageResult
+                                ageResult = measure.ageResult,
+                                childrenId = measure.childrenId,
                             ),
                             onClick = {
 //                                navController.navigate("detail/${measure.measurements?.id}")
@@ -203,8 +204,6 @@ fun HistoryScreen(
     }
 }
 
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun PreviewHistoryScreen() {

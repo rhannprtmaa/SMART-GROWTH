@@ -45,6 +45,8 @@ fun LoginScreen( viewModel: AuthViewModel) {
     var email: String by remember { mutableStateOf("") }
     var password: String by remember { mutableStateOf("") }
 
+    val showPasswordError = password.isNotEmpty() && password.length < 6
+
     val loginState by viewModel.loginState.collectAsState()
 
     when (loginState) {
@@ -97,7 +99,7 @@ fun LoginScreen( viewModel: AuthViewModel) {
             TextFieldCustom(
                 modifier = Modifier.fillMaxWidth(),
                 values = email,
-                label = "Email",
+                label = "Email atau Username",
                 onValueChange = {
                    email = it
                 },
@@ -110,8 +112,20 @@ fun LoginScreen( viewModel: AuthViewModel) {
                 onValueChange = {
                     password = it
                 },
-                isPasswordField = true,
                 keyboardType = KeyboardType.Password,
+                isPasswordField = true,
+                isError = showPasswordError,
+                singleLine = true,
+                supportingText = if (showPasswordError) {
+                    {
+                        Text(
+                            text = "Password minimal 6 karakter",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.sp
+                            )
+                        )
+                    }
+                } else null
             )
         }
         Spacer(Modifier.height(32.dp))
@@ -121,7 +135,7 @@ fun LoginScreen( viewModel: AuthViewModel) {
             onClick = {
                 Log.d("LOGIN", "Button clicked")
                 viewModel.login(
-                    email = email,
+                    inputEmailOrUsername = email,
                     password = password
                 )
             }

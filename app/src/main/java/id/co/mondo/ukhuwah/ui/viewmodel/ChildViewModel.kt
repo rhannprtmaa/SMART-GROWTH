@@ -3,74 +3,93 @@ package id.co.mondo.ukhuwah.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import id.co.mondo.ukhuwah.data.model.AgeResult
-import id.co.mondo.ukhuwah.data.model.ChildWithMeasure
-import id.co.mondo.ukhuwah.data.model.Children
+import id.co.mondo.ukhuwah.data.dto.ChildWithMeasureDto
+import id.co.mondo.ukhuwah.data.dto.InsertNewChildDto
+import id.co.mondo.ukhuwah.data.model.AllChild
+import id.co.mondo.ukhuwah.data.model.ChildMeasure
+import id.co.mondo.ukhuwah.data.model.ChildWithMeasured
 import id.co.mondo.ukhuwah.data.model.CountChildMeasure
-import id.co.mondo.ukhuwah.data.model.InsertChildren
+import id.co.mondo.ukhuwah.data.model.InsertNewChildren
+import id.co.mondo.ukhuwah.data.model.ListMeasure
 import id.co.mondo.ukhuwah.data.model.NewMeasure
-import id.co.mondo.ukhuwah.data.model.User
-import id.co.mondo.ukhuwah.data.supabase.UserService
+import id.co.mondo.ukhuwah.data.model.ProfileChild
+import id.co.mondo.ukhuwah.data.model.UpdateProfileChild
+import id.co.mondo.ukhuwah.data.supabase.ChildService
 import id.co.mondo.ukhuwah.data.utils.calculateAgeFromBirthToMeasure
-import id.co.mondo.ukhuwah.data.utils.calculateAgeFromBirthToNow
-import id.co.mondo.ukhuwah.data.utils.formatDateToMonthYear
 import id.co.mondo.ukhuwah.ui.common.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ChildViewModel(
-    private val userService: UserService = UserService(),
+    private val childService: ChildService = ChildService()
 ) : ViewModel() {
 
-    private val _newMeasureState = MutableStateFlow<UiState<User>>(UiState.Empty)
-    val newMeasureState: StateFlow<UiState<User>> = _newMeasureState
-
-    private val _childState = MutableStateFlow<UiState<List<Children>>>(UiState.Empty)
-    val childState: StateFlow<UiState<List<Children>>> = _childState
-
-    private val _countChildMeasrueState = MutableStateFlow<UiState< CountChildMeasure>>(UiState.Empty)
-    val countChildMeasureState: StateFlow<UiState<CountChildMeasure>> = _countChildMeasrueState
-
-    private val _allChilWithMeasuredState =
-        MutableStateFlow<UiState<List<ChildWithMeasure>>>(UiState.Empty)
-    val allChildWithMeasureState: StateFlow<UiState<List<ChildWithMeasure>>> =
-        _allChilWithMeasuredState
+    private val _allChildState = MutableStateFlow<UiState<List<AllChild>>>(UiState.Empty)
+    val allChildState: StateFlow<UiState<List<AllChild>>> = _allChildState
 
     private val _insertNewMeasureState = MutableStateFlow<UiState<String>>(UiState.Empty)
     val insertNewMeasureState: StateFlow<UiState<String>> = _insertNewMeasureState
 
+    private val _countChildMeasrueState =
+        MutableStateFlow<UiState<CountChildMeasure>>(UiState.Empty)
+    val countChildMeasureState: StateFlow<UiState<CountChildMeasure>> = _countChildMeasrueState
+
+    private val _allChilWithMeasuredState =
+        MutableStateFlow<UiState<List<ListMeasure>>>(UiState.Empty)
+    val allListMeasureState: StateFlow<UiState<List<ListMeasure>>> =
+        _allChilWithMeasuredState
+
     private val _insertNewChildState = MutableStateFlow<UiState<String>>(UiState.Empty)
     val insertNewChildState: StateFlow<UiState<String>> = _insertNewChildState
 
-    private val _childWithMeasureState = MutableStateFlow<UiState<ChildWithMeasure>>(UiState.Empty)
-    val childWithMeasureState: StateFlow<UiState<ChildWithMeasure>> = _childWithMeasureState
+    private val _childWithMeasureState = MutableStateFlow<UiState<ChildWithMeasured>>(UiState.Empty)
+    val childWithMeasureState: StateFlow<UiState<ChildWithMeasured>> = _childWithMeasureState
 
-    private val _childId = MutableStateFlow<UiState<Children>>(UiState.Empty)
-    val childId: StateFlow<UiState<Children>> = _childId
+    private val _childId = MutableStateFlow<UiState<ProfileChild>>(UiState.Empty)
+    val childId: StateFlow<UiState<ProfileChild>> = _childId
+
+    private val _updateChildId = MutableStateFlow<UiState<String>>(UiState.Empty)
+    val updateChildId: StateFlow<UiState<String>> = _updateChildId
+
+
+    private var rawChild: ChildWithMeasureDto? = null
 
     init {
-        _childWithMeasureState.value = UiState.Success(defaultChildMeasure())
+        getAllChild()
     }
 
 
     fun getAllChild() {
-        _childState.value = UiState.Loading
+        _allChildState.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.getAllChildWithMeasure()
-            response.onSuccess {
-                _childState.value = UiState.Success(it)
-                Log.d("UserViewModel", "Get all children sukses: $it")
+            val response = childService.getAllChild()
+            response.onSuccess { list ->
+                val response = list.map { child ->
+                    AllChild(
+                        id = child.id,
+                        name = child.name.lowercase().replaceFirstChar { it.uppercase() },
+                        nik = child.nik ?: ""
+                    )
+                }
+                if (response.isEmpty()) {
+                    Log.d("UserViewModel", "Data children Kosong")
+                    _allChildState.value = UiState.Empty
+                } else {
+                    Log.d("UserViewModel", "Get all children sukses: $response")
+                    _allChildState.value = UiState.Success(response)
+                }
             }.onFailure {
-                _childState.value = UiState.Error("Gagal mendapatkan data")
                 Log.d("UserViewModel", "Get all children GAGAL: $it")
+                _allChildState.value = UiState.Error("Gagal mendapatkan mengambil data")
             }
         }
     }
 
-    fun getCountChildMeasure(){
+
+    fun getCountChildMeasure() {
         viewModelScope.launch {
-            val response = userService.getAllChildWithMeasure()
+            val response = childService.getCountChildWithMeasure()
             response.onSuccess { child ->
                 val countChild = child.size
                 val countMeasure = child.flatMap { it.measurements ?: emptyList() }.size
@@ -78,94 +97,87 @@ class ChildViewModel(
                     countChild = countChild,
                     countMeasure = countMeasure
                 )
-                _countChildMeasrueState.value = UiState.Success(count)
                 Log.d("UserViewModel", "Get count child & measure sukses: $count")
+                _countChildMeasrueState.value = UiState.Success(count)
             }.onFailure {
-                _countChildMeasrueState.value = UiState.Error("Gagal mendapatkan data")
-                Log.d("UserViewModel", "Get count child & measure GAGAL: $it")
+                Log.d(
+                    "UserViewModel-[getCountChildMeasure]",
+                    "Get count child & measure GAGAL: $it"
+                )
+                _countChildMeasrueState.value =
+                    UiState.Error("Gagal mendapatkan data Jumlah anak dan pengukuran")
             }
         }
     }
 
     fun getChildById(id: Int) {
-        _childId.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.getChildById(id)
-            response.onSuccess {
-                _childId.value = UiState.Success(it)
-                Log.d("UserViewModel", "Get child by Id sukses: $it")
+            _childId.value = UiState.Loading
+            val response = childService.getChildById(id)
+            response.onSuccess { child ->
+                val setChild = ProfileChild(
+                    id = child.id,
+                    name = child.name,
+                    nik = child.nik.orEmpty(),
+                    gender = child.gender,
+                    birth = child.birth,
+                    heightCm = child.heightCm,
+                    weightKg = child.weightKg,
+                    headCm = child.headCm
+                )
+                Log.d("UserViewModel", "Get child by Id sukses: $setChild")
+                _childId.value = UiState.Success(setChild)
             }.onFailure {
-                _childId.value = UiState.Error("Gagal mendapatkan data")
                 Log.d("UserViewModel", "Get child by Id GAGAL: $it")
+                _childId.value = UiState.Error("Gagal mengambil data child")
             }
         }
     }
 
-    private fun defaultChildMeasure(): ChildWithMeasure {
-        return ChildWithMeasure(
-            children_id = null,
-            name = "-",
-            id = -1,
-            birth = null,
-            ageResult = AgeResult(
-                years = 0,
-                months = 0,
-                days = 0
-            ),
-            measured_at = "-",
-            heightCm = 0.0,
-            weightKg = 0.0,
-            armCm = 0.0,
-            headCm = 0.0
-        )
-    }
-
-
-    fun getChildMeasure(childId: Int) {
+    fun getChildWithMeasure(id: Int) {
         _childWithMeasureState.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.getAllChildWithMeasure()
-            response.onSuccess { childrenList ->
-                val child = childrenList.firstOrNull() { it.id == childId }
+            val response = childService.getChildWithMeasureById(id)
+            response.onSuccess { data ->
+                rawChild = data
 
-                val lastMeasure = child?.measurements?.maxByOrNull { it.measured_at ?: "" }
+                val measures = data.measurements.orEmpty()
 
-                val yearMonth = formatDateToMonthYear(lastMeasure?.measured_at)
+                if (measures.isEmpty()) {
+                    _childWithMeasureState.value = UiState.Empty
+                    return@onSuccess
+                }
 
-                val ageCalulate = calculateAgeFromBirthToMeasure(
-                    birth = child?.birth ?: "",
-                    measuredAt = lastMeasure?.measured_at ?: ""
+                val latestMeasure = measures.maxByOrNull { it.measuredAt }
+
+                if (latestMeasure == null) {
+                    _childWithMeasureState.value = UiState.Empty
+                    return@onSuccess
+                }
+
+                val ageResult = calculateAgeFromBirthToMeasure(
+                    birth = data.birth,
+                    measuredAt = latestMeasure.measuredAt
                 )
 
-                Log.d("ChildViewModel", "Child: $child")
-                Log.d("ChildViewModel", "Last Measure: $lastMeasure")
-                Log.d("ChildViewModel", "Age Result: $ageCalulate")
-
-
-
-                if (child != null && lastMeasure != null) {
-                    _childWithMeasureState.value = UiState.Success(
-                        ChildWithMeasure(
-                            children_id = child.id,
-                            name = child.name,
-                            id = lastMeasure.id,
-                            birth = child.birth,
-                            measured_at = lastMeasure.measured_at,
-                            ageResult = ageCalulate,
-                            year = yearMonth?.first,
-                            month = yearMonth?.second,
-                            heightCm = lastMeasure.heightCm,
-                            weightKg = lastMeasure.weightKg,
-                            armCm = lastMeasure.armCm,
-                            headCm = lastMeasure.headCm,
-                        )
+                val response = ChildWithMeasured(
+                    id = data.id,
+                    name = data.name,
+                    ageResult = ageResult,
+                    measurement = ChildMeasure(
+                        id = latestMeasure.id,
+                        measuredAt = latestMeasure.measuredAt,
+                        heightCm = latestMeasure.heightCm ?: 0.0,
+                        weightKg = latestMeasure.weightKg ?: 0.0,
+                        armCm = latestMeasure.armCm ?: 0.0,
+                        headCm = latestMeasure.headCm ?: 0.0
                     )
-                } else {
-                    _childWithMeasureState.value = UiState.Success(
-                        defaultChildMeasure()
-                    )
-                    Log.d("ChildViewModel", "Child or last measure is null")
-                }
+                )
+                Log.d("UserViewModel", "Get child with measure sukses: $data")
+                _childWithMeasureState.value = UiState.Success(response)
+            }.onFailure {
+                Log.d("UserViewModel", "Get child with measure GAGAL: $it")
+                _childWithMeasureState.value = UiState.Error("Gagal mendapatkan data")
             }
         }
     }
@@ -173,20 +185,19 @@ class ChildViewModel(
     fun getAllChildMeasure() {
         _allChilWithMeasuredState.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.getAllChildWithMeasure()
+            val response = childService.getListMeasure()
             response.onSuccess {
                 val allMeasure = it.flatMap { children ->
                     children.measurements?.map { measure ->
                         val ageResult = calculateAgeFromBirthToMeasure(
-                            birth = children.birth ?: "",
-                            measuredAt = measure.measured_at ?: ""
-                        )
-                        ChildWithMeasure(
-                            children_id = children.id,
-                            name = children.name,
-                            id = measure.id,
                             birth = children.birth,
-                            measured_at = measure.measured_at,
+                            measuredAt = measure.measuredAt
+                        )
+                        ListMeasure(
+                            childrenId = children.id,
+                            name = children.name,
+                            measureId = measure.id,
+                            measuredAt = measure.measuredAt,
                             ageResult = ageResult,
                             heightCm = measure.heightCm,
                             weightKg = measure.weightKg,
@@ -194,64 +205,16 @@ class ChildViewModel(
                             headCm = measure.headCm
                         )
                     } ?: emptyList()
-                }.sortedByDescending { it.measured_at }
+                }.sortedByDescending { it.measuredAt }
+                Log.d("UserViewModel", "Get All Children with measure Sukses: $allMeasure")
                 if (allMeasure.isEmpty()) {
                     _allChilWithMeasuredState.value = UiState.Empty
                 } else {
                     _allChilWithMeasuredState.value = UiState.Success(allMeasure)
                 }
-                Log.d("UserViewModel", "Get All Children with measure Sukses: $allMeasure")
             }.onFailure {
-                _allChilWithMeasuredState.value = UiState.Error("Gagal mendapatkan data")
                 Log.d("UserViewModel", "Get All Children with measure Gagal: $it")
-            }
-        }
-    }
-
-    fun defaultSelectUser(): User {
-        return User(
-            id_users = "",
-            name = "",
-            birth = "",
-            phone = "",
-            children = emptyList()
-        )
-    }
-
-    fun selectUserWithChild(userId: String?) {
-        _newMeasureState.value = UiState.Loading
-        viewModelScope.launch {
-            val response = userService.getAllUsersWithChild()
-            response.onSuccess { userList ->
-                val user = userList.firstOrNull() { it.id_users == userId }
-
-                if (user == null) {
-                    _newMeasureState.value =
-                        UiState.Error("User tidak ditemukan")
-                    return@launch
-                }
-
-                val mapUser = User(
-                    id_users = user.id_users,
-                    name = user.name,
-                    birth = user.birth,
-                    phone = user.phone,
-                    children = user.children?.map { child ->
-                        Children(
-                            id = child.id,
-                            name = child.name,
-                            ageResult = calculateAgeFromBirthToNow(
-                                birth = child.birth ?: ""
-                            )
-                        )
-                    }
-                )
-                _newMeasureState.value = UiState.Success(mapUser)
-                Log.d("UserViewModel", "Get all users with child sukses: $mapUser")
-
-            }.onFailure {
-                _newMeasureState.value = UiState.Error("Gagal mendapatkan data")
-                Log.d("UserViewModel", "Get all users with child GAGAL: $it")
+                _allChilWithMeasuredState.value = UiState.Error("Gagal mendapatkan data")
             }
         }
     }
@@ -270,56 +233,114 @@ class ChildViewModel(
         Log.d("ChildViewModel", "Insert new measure: $measure")
         _insertNewMeasureState.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.insertNewMeasureChild(measure)
+            val response = childService.insertNewMeasureChild(measure)
             response.onSuccess {
-                _insertNewMeasureState.value = UiState.Success("Insert new measure sukses")
                 Log.d("ChildViewModel", "Insert new measure sukses: $it")
+                _insertNewMeasureState.value = UiState.Success("Insert new measure sukses")
             }.onFailure {
-                _insertNewMeasureState.value = UiState.Error("Gagal insert data")
                 Log.d("ChildViewModel", "Insert new measure GAGAL: $it")
+                _insertNewMeasureState.value = UiState.Error("Gagal insert data")
             }
         }
     }
 
-    fun insertNewChildUser(child: InsertChildren) {
+    fun insertNewChildUser(child: InsertNewChildren) {
         _insertNewChildState.value = UiState.Loading
         viewModelScope.launch {
-            val newChild = InsertChildren(
-                users_id = child.users_id,
+            val setChild = InsertNewChildDto(
+                userId = child.userId,
                 name = child.name,
+                childNo = child.childNo,
                 nik = child.nik,
                 gender = child.gender,
                 birth = child.birth,
                 heightCm = child.heightCm,
                 weightKg = child.weightKg,
-                armCm = child.armCm,
                 headCm = child.headCm
             )
-            val response = userService.insertNewChildUser(newChild)
+            val response = childService.insertNewChildUser(setChild)
             response.onSuccess {
-                _insertNewChildState.value = UiState.Success("Insert new child sukses")
                 Log.d("ChildViewModel", "Insert new child sukses: $it")
+                _insertNewChildState.value = UiState.Success("Insert new child sukses")
             }.onFailure {
-                _insertNewChildState.value = UiState.Error("Gagal insert data")
                 Log.d("ChildViewModel", "Insert new child GAGAL: $it")
+                _insertNewChildState.value = UiState.Error("Gagal insert data")
             }
         }
     }
 
 
-    fun updateChild(child: Children) {
-        _childId.value = UiState.Loading
+    fun updateChild(child: UpdateProfileChild) {
+        _updateChildId.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.updateChild(child)
-            response.onSuccess {
-                _childId.value = UiState.Success(it)
-                Log.d("ChildViewModel", "Update profile children sukses: $it")
+            val response = childService.updateChild(child)
+            response.onSuccess { child ->
+                Log.d("ChildViewModel", "Update profile children sukses: $child")
+                getChildById(child.id)
+                _updateChildId.value = UiState.Success("Update profile children sukses")
             }.onFailure {
-                _childId.value = UiState.Error("Gagal update profil")
                 Log.d("ChildViewModel", "Update profil children GAGAL: $it")
+                _updateChildId.value = UiState.Error("Gagal update profil")
             }
         }
     }
 
 
 }
+
+
+//    filter bulan tahun next
+
+//    fun childMeasureMonthYearFilter(month: String, year: String) {
+//        val child = rawChild
+//        if (child == null) {
+//            _childWithMeasureState.value = UiState.Empty
+//            return
+//        }
+//
+//        val filteredMeasures = child.measurements
+//            ?.filter { measure ->
+//                val date = measure.measuredAt ?: return@filter false
+//
+//                val measureYear = date.substring(0, 4)
+//                val measureMonth = date.substring(5, 7)
+//
+//                measureYear == year && measureMonth == month
+//            }
+//            ?: emptyList()
+//
+//        if (filteredMeasures.isEmpty()) {
+//            _childWithMeasureState.value = UiState.Empty
+//            return
+//        }
+//
+//        val latestMeasure = filteredMeasures
+//            .maxByOrNull { it.measuredAt }
+//
+//        if (latestMeasure == null) {
+//            _childWithMeasureState.value = UiState.Empty
+//            return
+//        }
+//
+//        val ageResult = calculateAgeFromBirthToMeasure(
+//            birth = child.birth,
+//            measuredAt = latestMeasure.measuredAt
+//        )
+//
+//        _childWithMeasureState.value = UiState.Success(
+//            ChildWithMeasured(
+//                id = child.id,
+//                name = child.name,
+//                ageResult = ageResult,
+//                measurement = ChildMeasure(
+//                    id = latestMeasure.id,
+//                    measuredAt = latestMeasure.measuredAt,
+//                    heightCm = latestMeasure.heightCm ?: 0.0,
+//                    weightKg = latestMeasure.weightKg ?: 0.0,
+//                    armCm = latestMeasure.armCm ?: 0.0,
+//                    headCm = latestMeasure.headCm ?: 0.0
+//                )
+//            )
+//        )
+//
+//    }

@@ -8,9 +8,7 @@ import io.github.jan.supabase.storage.Storage
 
 object SupabaseConfig {
     val client = createSupabaseClient(
-//        supabaseUrl ="https://zkxrfgbospnavtodhsjv.supabase.co",
             BuildConfig.SUPABASE_URL,
-//        supabaseKey = "sb_publishable_uI6--LFWncwLdlbgIz_hQQ_ShJT7nE_"
             BuildConfig.SUPABASE_KEY
     ) {
         install(Auth){

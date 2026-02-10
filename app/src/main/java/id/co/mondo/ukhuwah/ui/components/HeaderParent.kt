@@ -28,6 +28,7 @@ import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 @Composable
 fun HeaderParent(
     onClickNotification: () -> Unit = {},
+    name: String,
     onClickProfile: () -> Unit = {}
 ) {
     Row(
@@ -37,7 +38,7 @@ fun HeaderParent(
     ) {
         Column {
             Text(
-                text = "Selamat datang, A. Ulfa",
+                text = "Selamat datang, ${name}",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = 14.sp
                 ),
@@ -92,6 +93,6 @@ fun HeaderParent(
 @Composable
 fun PreviewHeaderParent() {
     Innovillage6thTheme {
-        HeaderParent()
+        HeaderParent(name = "kaco")
     }
 }

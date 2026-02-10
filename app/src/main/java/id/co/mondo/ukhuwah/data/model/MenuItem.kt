@@ -3,7 +3,6 @@ package id.co.mondo.ukhuwah.data.model
 import androidx.compose.ui.graphics.Color
 import id.co.mondo.ukhuwah.R
 import id.co.mondo.ukhuwah.ui.theme.bakunparent
-import id.co.mondo.ukhuwah.ui.theme.exanak
 import id.co.mondo.ukhuwah.ui.theme.inkes
 import id.co.mondo.ukhuwah.ui.theme.jalper
 import id.co.mondo.ukhuwah.ui.theme.statper
@@ -44,13 +43,7 @@ val menuItemsKader = listOf(
         icon = R.drawable.family,
         color = bakunparent,
         routes = "register"
-    ),
-    MenuItem(
-        title = "Export Data Anak",
-        icon = R.drawable.export,
-        color = exanak,
-        routes = ""
-    ),
+    )
 )
 
 val menuItemsParent = listOf(

@@ -28,11 +28,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.co.mondo.ukhuwah.R
+import id.co.mondo.ukhuwah.data.model.AgeResult
+import id.co.mondo.ukhuwah.data.model.ListChild
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 
 @Composable
-fun CardChild() {
+fun CardChild(
+    child: ListChild
+) {
+
+    val age = child.ageResult
+
     Card(
         modifier = Modifier.size(width = 215.dp, height = 110.dp),
         shape = RoundedCornerShape(12.dp),
@@ -81,14 +88,14 @@ fun CardChild() {
             ) {
                 Column {
                     Text(
-                        text = "Arnawati",
+                        text = child.nameChild,
                         color = Color.Black,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 14.sp
                         ),
                     )
                     Text(
-                        text = "2 Tahun 1 Bulan 3 Hari",
+                        text = "${age.years} Tahun ${age.months} Bulan ${age.days} Hari",
                         color = Color.Black,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontSize = 10.sp,
@@ -107,13 +114,45 @@ fun CardChild() {
     }
 }
 
+@Composable
+fun EmptyChildCard() {
+    Card(
+        modifier = Modifier.size(width = 215.dp, height = 110.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Belum ada data anak",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewCardChild() {
     Innovillage6thTheme {
         Column(Modifier.fillMaxSize()) {
-            CardChild()
+            CardChild(
+                child = ListChild(
+                    nameChild = "Bambang",
+                    ageResult = AgeResult(
+                        years = 1,
+                        months = 2,
+                        days = 3
+                    ),
+                    id = 1,
+                    childNo = 1
+                )
+
+            )
         }
     }
 }

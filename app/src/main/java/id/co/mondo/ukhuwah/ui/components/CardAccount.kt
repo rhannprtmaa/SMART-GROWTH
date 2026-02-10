@@ -50,8 +50,15 @@ fun CardAccount(
         ) {
             Column(
                 modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                SettingItem(
+                    icon = painterResource(R.drawable.profile),
+                    title = "Profile",
+                    onClick = {
+
+                    }
+                )
                 SettingItem(
                     icon = painterResource(R.drawable.lock),
                     title = "Ubah Password",

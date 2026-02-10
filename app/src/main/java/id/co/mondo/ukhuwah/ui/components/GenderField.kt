@@ -38,8 +38,8 @@ fun GenderField(
                 modifier = Modifier.padding(end = 24.dp)
             ) {
                 RadioButton(
-                    selected = selectedGender == "Laki-Laki",
-                    onClick = { onGenderSelected("Laki-Laki") },
+                    selected = selectedGender == "L",
+                    onClick = { onGenderSelected("L") },
                     enabled = enabled
                 )
                 Text(
@@ -51,8 +51,8 @@ fun GenderField(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
-                    selected = selectedGender == "Perempuan",
-                    onClick = { onGenderSelected("Perempuan") },
+                    selected = selectedGender == "P",
+                    onClick = { onGenderSelected("P") },
                     enabled = enabled
                 )
                 Text(

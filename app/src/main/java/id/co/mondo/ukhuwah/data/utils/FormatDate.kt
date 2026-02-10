@@ -1,5 +1,6 @@
 package id.co.mondo.ukhuwah.data.utils
 
+import id.co.mondo.ukhuwah.data.dto.MeasureDto
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -17,4 +18,20 @@ fun formatDateToMonthYear(date: String?): Pair<String, String>? {
 
     return year to month
 }
+
+fun filterMeasuredByMonthYear(
+    measurements: List<MeasureDto>?,
+    month: String,
+    year: String
+): List<MeasureDto> {
+    return measurements?.filter { measure ->
+        val date = measure.measuredAt ?: return@filter false
+
+        val measureYear = date.substring(0, 4)   // "2025"
+        val measureMonth = date.substring(5, 7)  // "12"
+
+        measureYear == year && measureMonth == month
+    } ?: emptyList()
+}
+
 

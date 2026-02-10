@@ -1,8 +1,9 @@
 package id.co.mondo.ukhuwah.ui.components
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,8 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -21,17 +23,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import id.co.mondo.ukhuwah.R
+import id.co.mondo.ukhuwah.data.model.AllRecipes
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 
@@ -40,14 +42,15 @@ fun MpasiItemCard(
     navController: NavController,
     modifier: Modifier = Modifier,
     fontBody: TextStyle,
-    fontTitle: TextStyle
+    fontTitle: TextStyle,
+    item: AllRecipes // Changed from recipes: Recipes to item: MpasiDummy
 ) {
     Card(
         modifier = modifier
             .height(125.dp)
             .clickable(
                 onClick = {
-                    navController.navigate("detail-mpasi")
+                    navController.navigate("detail-mpasi/${item.id}")
                 }
             ),
         shape = RoundedCornerShape(12.dp),
@@ -72,13 +75,10 @@ fun MpasiItemCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Sop Bola Udang",
-                    style = fontTitle
-//                        MaterialTheme.typography.titleMedium.copy(
-//                        fontSize = 12.sp,
-//                        lineHeight = 16.sp,
-//                        fontWeight = FontWeight.Bold
-//                    )
+                    text = item.title,
+                    style = fontTitle,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -91,11 +91,8 @@ fun MpasiItemCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "12 Bulan ke atas",
+                        text = item.age,
                         style = fontBody,
-//                            MaterialTheme.typography.bodyMedium.copy(
-//                            fontSize = 10.sp
-//                        ),
                         color = Color.Gray
                     )
                 }
@@ -117,9 +114,6 @@ fun MpasiItemCard(
                         Text(
                             text = "100",
                             style = fontBody
-//                                MaterialTheme.typography.bodyMedium.copy(
-//                                fontSize = 12.sp
-//                            )
                         )
                     }
                     Row(
@@ -135,9 +129,6 @@ fun MpasiItemCard(
                         Text(
                             text = "100",
                             style = fontBody
-//                                MaterialTheme.typography.bodyMedium.copy(
-//                                fontSize = 12.sp
-//                            )
                         )
                     }
                     Icon(
@@ -149,14 +140,19 @@ fun MpasiItemCard(
                 }
 
             }
-            Image(
-                painter = painterResource(R.drawable.bubur),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
-                    .width(100.dp)
-                    .shadow(8.dp, RoundedCornerShape(percent = 25))
-            )
+                    .size(100.dp)
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = "Default Image",
+                    tint = Color.DarkGray,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
 
 
         }
@@ -177,7 +173,13 @@ fun PreviewPmasiItemCard() {
                 fontBody = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 12.sp
                 ),
-                fontTitle = MaterialTheme.typography.titleMedium
+                fontTitle = MaterialTheme.typography.titleMedium,
+                item = AllRecipes(
+                    id = 1,
+                    image = "",
+                    title = "Title",
+                    age = "Age"
+                )
             )
         }
     }

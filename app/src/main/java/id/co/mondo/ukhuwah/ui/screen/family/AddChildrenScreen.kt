@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import id.co.mondo.ukhuwah.data.model.InsertChildren
+import id.co.mondo.ukhuwah.data.model.InsertNewChildren
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.ButtonCustom
@@ -60,10 +60,11 @@ fun AddChildrenScreen(
 
     val userViewModel: UserViewModel = viewModel()
     val childViewModel: ChildViewModel = viewModel()
-    val userState by userViewModel.userState.collectAsState()
-    val insertNewChildState by childViewModel.insertNewChildState.collectAsState()
 
-    val newMeasureState by childViewModel.newMeasureState.collectAsState()
+    val selectUser by userViewModel.selectedUser.collectAsState()
+    val userByIdState by userViewModel.userId.collectAsState()
+
+    val insertNewChildState by childViewModel.insertNewChildState.collectAsState()
 
     var isSearchMode by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -73,17 +74,17 @@ fun AddChildrenScreen(
 
 
     var name by remember { mutableStateOf("") }
+    var childNo by remember { mutableStateOf("") }
     var nik by remember { mutableStateOf("") }
     var birthDate by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
     var tb by remember { mutableStateOf("") }
     var bb by remember { mutableStateOf("") }
     var lk by remember { mutableStateOf("") }
-    var lila by remember { mutableStateOf("") }
 
 
     LaunchedEffect(Unit) {
-        userViewModel.getAllUser()
+        userViewModel.selectUser()
     }
 
     LaunchedEffect(insertNewChildState) {
@@ -99,11 +100,11 @@ fun AddChildrenScreen(
                 name = ""
                 nik = ""
                 birthDate = ""
+                childNo = ""
                 gender = ""
                 tb = ""
                 bb = ""
                 lk = ""
-                lila = ""
             }
             is UiState.Error -> {
                 Toast.makeText(
@@ -117,6 +118,13 @@ fun AddChildrenScreen(
         }
     }
 
+    LaunchedEffect(selectUserId) {
+        selectUserId?.let { id ->
+            userViewModel.getUserById(id)
+        }
+    }
+
+
     if (insertNewChildState is UiState.Loading) {
         Box(
             modifier = Modifier
@@ -129,8 +137,8 @@ fun AddChildrenScreen(
         }
     }
 
-    val userList = when (userState) {
-        is UiState.Success -> (userState as UiState.Success).data
+    val userList = when (selectUser) {
+        is UiState.Success -> (selectUser as UiState.Success).data
         else -> emptyList()
     }
 
@@ -138,15 +146,13 @@ fun AddChildrenScreen(
         userList
     } else {
         userList.filter {
-            it.name
-                ?.contains(searchQuery, ignoreCase = true)
-                ?: false
+            it.name.contains(searchQuery, ignoreCase = true)
         }
     }
 
-    val users = when (newMeasureState) {
-        is UiState.Success -> (newMeasureState as UiState.Success).data
-        else -> childViewModel.defaultSelectUser()
+    val user = when (userByIdState) {
+        is UiState.Success -> (userByIdState as UiState.Success).data
+        else -> null
     }
 
     Box(
@@ -188,7 +194,7 @@ fun AddChildrenScreen(
                         )
                         TextFieldCustom(
                             modifier = Modifier.fillMaxWidth(),
-                            values = users.name ?: "",
+                            values = user?.name ?: "",
                             label = "Nama Orang Tua",
                             onValueChange = {
 
@@ -196,18 +202,9 @@ fun AddChildrenScreen(
                             keyboardType = KeyboardType.Text,
                             enabled = false
                         )
-                        TextFieldDateCustom(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = users.birth ?: "",
-                            label = "Tanggal Lahir",
-                            onDateSelected = {
-
-                            },
-                            enabled = false
-                        )
                         TextFieldCustom(
                             modifier = Modifier.fillMaxWidth(),
-                            values = users.phone ?: "",
+                            values = user?.phone ?: "",
                             label = "No. Handphone",
                             onValueChange = {
 
@@ -232,6 +229,16 @@ fun AddChildrenScreen(
                                 name = it
                             },
                             keyboardType = KeyboardType.Text,
+                            enabled = enabled
+                        )
+                        TextFieldCustom(
+                            modifier = Modifier.fillMaxWidth(),
+                            values = childNo,
+                            label = "Anak Ke",
+                            onValueChange = {
+                                childNo = it
+                            },
+                            keyboardType = KeyboardType.Number,
                             enabled = enabled
                         )
                         TextFieldCustom(
@@ -308,16 +315,6 @@ fun AddChildrenScreen(
                                 keyboardType = KeyboardType.Decimal,
                                 enabled = enabled
                             )
-                            TextFieldCustom(
-                                modifier = Modifier.weight(1f),
-                                values = lila,
-                                label = "LiLA",
-                                onValueChange = {
-                                    lila = it
-                                },
-                                keyboardType = KeyboardType.Decimal,
-                                enabled = enabled
-                            )
                         }
                     }
 
@@ -328,16 +325,16 @@ fun AddChildrenScreen(
                         label = "Simpan",
                         onClick = {
                             val nikValue = nik.trim().ifEmpty { null }
-                            val child = InsertChildren(
-                                users_id = selectUserId,
+                            val child = InsertNewChildren(
+                                userId = selectUserId,
                                 name = name,
+                                childNo = childNo.toInt(),
                                 nik = nikValue,
                                 gender = gender,
                                 birth = birthDate,
                                 heightCm = tb.toDoubleOrNull(),
                                 weightKg = bb.toDoubleOrNull(),
-                                armCm = lk.toDoubleOrNull(),
-                                headCm = lila.toDoubleOrNull(),
+                                headCm = lk.toDoubleOrNull(),
                             )
                             childViewModel.insertNewChildUser(child)
                         },
@@ -388,10 +385,7 @@ fun AddChildrenScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
-                                                // ✅ pilih user
-                                                childViewModel.selectUserWithChild(user.id_users)
-
-                                                selectUserId = user.id_users
+                                                selectUserId = user.id
 
                                                 isSearchMode = false
                                                 searchQuery = ""

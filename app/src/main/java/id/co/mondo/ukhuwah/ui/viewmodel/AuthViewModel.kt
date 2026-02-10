@@ -3,6 +3,7 @@ package id.co.mondo.ukhuwah.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import id.co.mondo.ukhuwah.data.dto.InsertUserDto
 import id.co.mondo.ukhuwah.data.model.InsertUser
 import id.co.mondo.ukhuwah.data.supabase.AuthService
 import id.co.mondo.ukhuwah.data.supabase.UserService
@@ -62,12 +63,23 @@ class AuthViewModel(
         _isCheckingSession.value = false
     }
 
+    private fun resolveEmail(input: String): String {
+        val value = input.trim()
 
-    fun login(email: String, password: String) {
+        return if (value.contains("@")) {
+            value
+        } else {
+            "$value@bontoulu.com"
+        }
+    }
+
+
+    fun login(inputEmailOrUsername: String, password: String) {
+        Log.d("Login", "inputEmailOrUsername: $inputEmailOrUsername")
         _loginState.value = UiState.Loading
         viewModelScope.launch {
-            if (email.isBlank()) {
-                _loginState.value = UiState.Error("Email wajib diisi")
+            if (inputEmailOrUsername.isBlank()) {
+                _loginState.value = UiState.Error("Username atau Email wajib diisi")
                 return@launch
             }
 
@@ -75,9 +87,13 @@ class AuthViewModel(
                 _loginState.value = UiState.Error("Password wajib diisi")
                 return@launch
             }
-            val response = authService.login(email, password)
+
+            val emailOrUsername = resolveEmail(inputEmailOrUsername)
+            Log.d("Login", "Email atau Username: $emailOrUsername")
+
+            val response = authService.login(emailOrUsername, password)
             response.onSuccess {
-                Log.d("Login", "Login berhasil $email ")
+                Log.d("Login", "Login berhasil $emailOrUsername ")
                 loadUserRole()
                 _isLoggedIn.value = true
                 _loginState.value = UiState.Success("Login Berhasil")
@@ -88,9 +104,10 @@ class AuthViewModel(
                     } else {
                         "Login gagal, silakan coba lagi"
                     }
-                Log.d("Login", "Login gagal $email ")
+                Log.d("Login", "Login gagal $emailOrUsername : $it")
                 _isLoggedIn.value = false
                 _loginState.value = UiState.Error(errorMessage)
+
             }
         }
     }
@@ -105,25 +122,22 @@ class AuthViewModel(
     }
 
     fun createAccount(
-        email: String,
-        password: String,
-        confirmPassword: String,
         user: InsertUser
     ) {
         _registerState.value = UiState.Loading
 
         viewModelScope.launch {
 
-            if (email.isBlank()) {
+            if (user.email.isBlank()) {
                 _registerState.value = UiState.Error("Email wajib diisi")
                 return@launch
             }
 
-            if (password.length < 6) {
+            if (user.password.length < 6) {
                 _registerState.value = UiState.Error("Password minimal 6 karakter")
                 return@launch
             }
-            if (password != confirmPassword) {
+            if (user.password != user.confirmPassword) {
                 _registerState.value = UiState.Error("Password tidak sama")
                 return@launch
             }
@@ -131,8 +145,6 @@ class AuthViewModel(
             if (
                 user.name.isNullOrBlank() ||
                 user.nik.isNullOrBlank() ||
-                user.gender.isNullOrBlank() ||
-                user.birth.isNullOrBlank() ||
                 user.phone.isNullOrBlank() ||
                 user.address.isNullOrBlank()
             ) {
@@ -141,17 +153,21 @@ class AuthViewModel(
                 return@launch
             }
 
-            val responseAuth = authService.register(email, password)
+            val responseAuth = authService.register(user.email, user.password)
             responseAuth.onSuccess { account ->
-                val setUser = InsertUser(
-                    id_users = account.id,
-                    email = account.email,
+                val setUser = InsertUserDto(
+                    id = account.id,
                     name = user.name,
+                    fatherName = user.fatherName.orEmpty(),
                     nik = user.nik,
-                    gender = user.gender,
-                    birth = user.birth,
+                    kk = user.kk.orEmpty(),
+                    email = account.email,
                     phone = user.phone,
                     address = user.address
+                        .lowercase()
+                        .replaceFirstChar { it.uppercase() },
+                    isExampleEmail = false,
+                    isWhitoutNik = false
                 )
 
                 val responseUser = userService.createUser(setUser)

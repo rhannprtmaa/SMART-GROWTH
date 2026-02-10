@@ -4,37 +4,68 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    val id_users: String? = null,
-    val name: String? = null,
-    val email: String? = null,
-    val nik: String? = null,
-    val gender: String? =  null,
-    val birth: String? = null,
-    val phone: String? = null,
-    val address: String? = null,
-    val role: String? = null,
-    val created_at: String? = null,
-    val children: List<Children>? = null
+    val id: String,
+    val name: String,
+    val fatherName: String?,
+    val email: String,
+    val nik: String?,
+    val phone: String?,
+    val address: String,
+    val children: List<ListChild>?
+)
+
+@Serializable
+data class InsertUpdateUser(
+    val id: String,
+//    val name: String,
+    val fatherName: String,
+//    val email: String,
+//    val nik: String,
+    val kk: String?,
+    val phone: String,
+    val address: String
+)
+
+@Serializable
+data class UpdateUser(
+    val id: String,
+//    val name: String?,
+    val fatherName: String?,
+//    val email: String?,
+//    val nik: String?,
+//    val kk: String?,
+    val phone: String?,
+    val address: String?,
+    val isWhitoutNik: Boolean,
+    val isExampleEmail: Boolean
+)
+
+@Serializable
+data class SelectUser(
+    val id: String,
+    val name: String,
+    val nik: String?
 )
 
 @Serializable
 data class ListChild(
-    val id: Int? = null,
-    val nameChild: String? = null,
-    val ageResult: AgeResult? = null
+    val id: Int,
+    val nameChild: String,
+    val ageResult: AgeResult,
+    val childNo: Int,
 )
-
 
 @Serializable
 data class InsertUser(
-    val id_users: String? = null,
-    val name: String? = null,
-    val email: String? = null,
-    val nik: String? = null,
-    val gender: String? =  null,
-    val birth: String? = null,
-    val phone: String? = null,
-    val address: String? = null,
+    val name: String,
+    val fatherName: String?,
+    val email: String,
+    val password: String,
+    val confirmPassword: String,
+    val nik: String,
+    val kk: String?,
+    val phone: String,
+    val address: String,
 )
 
 @Serializable
@@ -42,4 +73,26 @@ data class RoleUser(
     val id_users: String? = null,
     val name: String? = null,
     val role: String,
+)
+
+
+@Serializable
+data class UserProfile(
+    val id: String,
+    val name: String,
+    val isExampleEmail: Boolean,
+    val isWhitoutNik: Boolean,
+    val children: List<ListChild>?
+)
+
+
+
+@Serializable
+data class AllUsers(
+    val id: String,
+    val name: String,
+    val email: String,
+    val nik: String?,
+    val phone: String?,
+    val children: Int
 )

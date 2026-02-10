@@ -41,7 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import id.co.mondo.ukhuwah.R
-import id.co.mondo.ukhuwah.data.model.User
+import id.co.mondo.ukhuwah.data.model.AllUsers
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.ParentCard
@@ -139,15 +139,12 @@ fun ParentScreen(
                     },
                     state = state
                 ) {
-                    val users = (userState as UiState.Success<List<User>>).data
-                    val sorted = users.sortedByDescending { it.created_at }
+                    val users = (userState as UiState.Success<List<AllUsers>>).data
                     val filteredUsers = if (query.isBlank()) {
-                        sorted
+                        users
                     } else {
-                        sorted.filter {
-                            it.name
-                                ?.contains(query, ignoreCase = true)
-                                ?: false
+                        users.filter {
+                            it.name.contains(query, ignoreCase = true)
                         }
                     }
                     LazyColumn(
@@ -158,15 +155,16 @@ fun ParentScreen(
                     ) {
                         items(filteredUsers) {
                             ParentCard(
-                                user = User(
+                                user = AllUsers(
+                                    id = it.id,
                                     name = it.name,
                                     nik = it.nik,
-                                    phone = it.phone,
                                     email = it.email,
+                                    phone = it.phone,
                                     children = it.children
                                 ),
                                 onClick = {
-                                    navController.navigate("profile-parent/${it.id_users}")
+                                    navController.navigate("profile-parent/${it.id}")
                                 }
                             )
                         }

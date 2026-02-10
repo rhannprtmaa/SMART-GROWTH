@@ -6,14 +6,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import id.co.mondo.ukhuwah.data.model.BalitaData
-import id.co.mondo.ukhuwah.data.model.Children
+import id.co.mondo.ukhuwah.data.model.AllUsers
+import id.co.mondo.ukhuwah.data.model.InsertUpdateUser
+import id.co.mondo.ukhuwah.data.model.ListChild
+import id.co.mondo.ukhuwah.data.model.SelectUser
+import id.co.mondo.ukhuwah.data.model.UpdateUser
 import id.co.mondo.ukhuwah.data.model.User
-import id.co.mondo.ukhuwah.data.retrofit.ApiConfig
+import id.co.mondo.ukhuwah.data.model.UserProfile
+import id.co.mondo.ukhuwah.data.supabase.AuthService
 import id.co.mondo.ukhuwah.data.supabase.UserService
 import id.co.mondo.ukhuwah.data.utils.calculateAgeFromBirthToNow
-import id.co.mondo.ukhuwah.data.utils.calculateAgeInMonths
-import id.co.mondo.ukhuwah.data.utils.calculateDateInMonth
 import id.co.mondo.ukhuwah.ui.common.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,18 +24,33 @@ import kotlinx.coroutines.launch
 
 class UserViewModel(
     private val userService: UserService = UserService(),
+    private val authService: AuthService = AuthService()
 ) : ViewModel() {
 
-    private val apiService = ApiConfig.getApiService()
+    private val _userState = MutableStateFlow<UiState<List<AllUsers>>>(UiState.Empty)
+    val userState: StateFlow<UiState<List<AllUsers>>> = _userState
 
-    private val _userState = MutableStateFlow<UiState<List<User>>>(UiState.Empty)
-    val userState: StateFlow<UiState<List<User>>> = _userState
+    private val _userProfileState = MutableStateFlow<UiState<UserProfile>>(UiState.Empty)
+    val userProfileState: StateFlow<UiState<UserProfile>> = _userProfileState
 
     private val _userId = MutableStateFlow<UiState<User>>(UiState.Empty)
     val userId: StateFlow<UiState<User>> = _userId
 
+    private val _selectedUser = MutableStateFlow<UiState<List<SelectUser>>>(UiState.Empty)
+    val selectedUser: StateFlow<UiState<List<SelectUser>>> = _selectedUser
+
+    private val _updateState = MutableStateFlow<UiState<String>>(UiState.Empty)
+    val updateState = _updateState.asStateFlow()
+
     var isRefreshing by mutableStateOf(false)
         private set
+
+    private var originalUser: User? = null
+
+    fun setOriginalUser(user: User) {
+
+        originalUser = user
+    }
 
     fun getAllUser(isRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -43,152 +60,197 @@ class UserViewModel(
                 _userState.value = UiState.Loading
             }
             val response = userService.getAllUsers()
-            response.onSuccess {
-                Log.d("UserViewModel", "Get all users sukses: $it")
-                _userState.value = UiState.Success(it)
+            response.onSuccess { data ->
+                val user = data.sortedByDescending { it.createdAt }.map { user ->
+                    AllUsers(
+                        id = user.id,
+                        name = user.name.lowercase().replaceFirstChar { it.uppercase() },
+                        email = user.email,
+                        nik = user.nik ?: "-",
+                        phone = user.phone ?: "-",
+                        children = user.children?.size ?: 0
+                    )
+                }
+                Log.d("UserViewModel", "Get all users sukses: $user")
+                _userState.value = UiState.Success(user)
             }.onFailure {
                 Log.d("UserViewModel", "Get all users GAGAL: $it")
                 _userState.value = UiState.Error("Gagal mendapatkan data")
             }
             isRefreshing = false
+
+        }
+    }
+
+    fun getProfileUser() {
+        viewModelScope.launch {
+            _userProfileState.value = UiState.Loading
+            val response = userService.getProfileUser()
+            response.onSuccess { user ->
+                val user = UserProfile(
+                    id = user.id,
+                    name = user.name.lowercase().replaceFirstChar { it.uppercase() },
+                    isExampleEmail = user.isExampleEmail,
+                    isWhitoutNik = user.isWhitoutNik,
+                    children = user.children
+                        ?.sortedBy { it.childNo }
+                        ?.map {
+                            ListChild(
+                                id = it.id,
+                                nameChild = it.name.lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                ageResult = calculateAgeFromBirthToNow(
+                                    birth = it.birth
+                                ),
+                                childNo = it.childNo
+                            )
+                        }
+                )
+                Log.d("UserViewModel", "SUKSES mendapatkan Profile User: $user")
+                _userProfileState.value = UiState.Success(user)
+            }.onFailure {
+                Log.d("UserViewModel", "GAGAL mendapatkan Profile User: $it")
+                _userProfileState.value = UiState.Error("Gagal mendapatkan Profile User")
+            }
         }
 
     }
 
     fun getUserById(id: String) {
+        Log.d("UserViewModel", "Get user by id Loading...")
         _userId.value = UiState.Loading
         viewModelScope.launch {
             val response = userService.getUserById(id)
             response.onSuccess { user ->
 
-                if (user.id_users != id && user.id_users == null) {
+                if (user.id != id) {
                     _userId.value = UiState.Error("User tidak ditemukan")
                 }
 
                 val mapUser = User(
-                    id_users = user.id_users,
-                    name = user.name,
+                    id = user.id,
+                    name = user.name.lowercase().replaceFirstChar { it.uppercase() },
+                    fatherName = user.fatherName?.lowercase()?.replaceFirstChar { it.uppercase() },
                     nik = user.nik,
                     email = user.email,
-                    gender = user.gender,
-                    birth = user.birth,
                     phone = user.phone,
-                    address = user.address,
-                    children = user.children?.map { children ->
-                        Children(
-                            id = children.id,
-                            name = children.name,
-                            ageResult = calculateAgeFromBirthToNow(
-                                birth = children.birth ?: ""
+                    address = user.address.lowercase().replaceFirstChar { it.uppercase() },
+                    children = user.children
+                        ?.sortedBy { it.childNo }
+                        ?.map { children ->
+                            ListChild(
+                                id = children.id,
+                                nameChild = children.name.lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                ageResult = calculateAgeFromBirthToNow(
+                                    birth = children.birth
+                                ),
+                                childNo = children.childNo
                             )
-                        )
-                    }
-
+                        }
                 )
-
-                Log.d("UserViewModel", "Get user by id sukses: $mapUser")
+                Log.d("UserViewModel", "SUKSES Ambil data user by id: $mapUser")
+                setOriginalUser(mapUser)
                 _userId.value = UiState.Success(mapUser)
             }.onFailure {
-                Log.d("UserViewModel", "Get user by id GAGAL: $it")
+                Log.d("UserViewModel", "GAGAL Ambil data user by id: $it")
                 _userId.value = UiState.Error("Gagal mendapatkan data")
             }
 
         }
     }
 
-    fun updateUser(user: User) {
-        _userId.value = UiState.Loading
+    fun selectUser() {
+        _selectedUser.value = UiState.Loading
         viewModelScope.launch {
-            val response = userService.updateUser(user)
-            response.onSuccess {
-                _userId.value = UiState.Success(it)
-                Log.d("UserViewModel", "Update profil sukses: $it")
-            }.onFailure {
-                _userId.value = UiState.Error("Gagal update profil")
-                Log.d("UserViewModel", "Update profil GAGAL: $it")
-
-            }
-
-
-        }
-    }
-
-    private val _exportState = MutableStateFlow<UiState<String>>(UiState.Empty)
-    val exportState = _exportState.asStateFlow()
-
-    fun exportUsersByMonth(month: String) {
-        _exportState.value = UiState.Loading
-
-        viewModelScope.launch {
-            val result = userService.exportUsers()
-
-            result.onSuccess { children ->
-
-                // 1️⃣ MAPPING SEMUA CHILD → BALITADATA
-                val requestList = children.map { child ->
-                    val measurement = child.measurements?.firstOrNull{
-                        calculateDateInMonth(it.measured_at ?: "") == month
-                    }
-
-                    val ageMonth = calculateAgeInMonths(child.birth ?: "")
-
-                    BalitaData(
-                        nik = child.nik ?: "",
-                        namaAnak = child.name ?: "",
-                        tglLahir = child.birth ?: "",
-                        umur = ageMonth,
-                        jk = child.gender ?: "",
-                        namaOrtu = child.users?.name ?: "",
-                        nikOrtu = child.users?.nik ?: "",
-                        hp = child.users?.phone ?: "",
-                        alamat = child.users?.address ?: "",
-                        bulan = month,
-                        bb = measurement?.weightKg,
-                        tb = measurement?.heightCm,
-                        lila = measurement?.armCm,
-                        lkep = measurement?.headCm,
-                        status = measurement?.status
+            val response = userService.selectAllUsers()
+            response.onSuccess { data ->
+                val user = data.map {
+                    SelectUser(
+                        id = it.id,
+                        name = it.name.lowercase().replaceFirstChar { it.uppercase() },
+                        nik = it.nik ?: ""
                     )
                 }
-
-                try {
-                    // 2️⃣ KIRIM SEKALI SAJA
-                    val response = apiService.kirimData(requestList)
-
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        _exportState.value =
-                            UiState.Success("Export ${response.body()?.processed} data berhasil")
-                    } else {
-                        _exportState.value =
-                            UiState.Error(response.body()?.message ?: "Gagal export")
-                    }
-
-                } catch (e: Exception) {
-                    _exportState.value =
-                        UiState.Error("Gagal mengirim data ke Excel")
-                }
-
+                Log.d("UserViewModel", "SUKSES Ambil data user: $user")
+                _selectedUser.value = UiState.Success(user)
             }.onFailure {
-                _exportState.value =
-                    UiState.Error("Gagal mengambil data dari Supabase")
+                Log.d("UserViewModel", "GAGAL Ambil data user: $it")
+                _selectedUser.value = UiState.Error("Gagal mendapatkan data")
             }
         }
     }
 
+    fun updateUser(user: InsertUpdateUser) {
+        Log.d("UserViewModel", "Update user Loading...")
+        _updateState.value = UiState.Loading
+        viewModelScope.launch {
 
+//            val isWhitoutNik = user.nik.isEmpty()
+//            val isExampleEmail = user.email.contains("@bontoulu.com")
 
-}
-//            if (profileResult.isFailure) {
-//                _userId.value = UiState.Error("Gagal update profil")
+            // validasi
+//            if (isWhitoutNik && isExampleEmail) {
+//                _updateState.value = UiState.Empty
+//                _updateState.value = UiState.Error(
+//                    "Isi NIK dan ganti email dengan email yang valid"
+//                )
+//                return@launch
+//            }
+//
+//            if (isWhitoutNik) {
+//                _updateState.value = UiState.Empty
+//                _updateState.value = UiState.Error("Isi NIK terlebih dahulu")
+//                return@launch
+//            }
+//
+//            if (isExampleEmail) {
+//                _updateState.value = UiState.Empty
+//                _updateState.value = UiState.Error("Ganti email dengan email yang valid")
 //                return@launch
 //            }
 
-//                if (emailResult.isFailure) {
-//                    _userId.value = UiState.Error(
-//                        "Profil tersimpan, tapi email perlu verifikasi"
+//            val currentUser = (userId.value as? UiState.Success)?.data
+//            val oldEmail = currentUser?.email
+
+            // 🔥 UPDATE EMAIL DI AUTH → WAJIB DITUNGGU
+//            if (oldEmail != null && user.email != oldEmail) {
+//                val authResult = authService.updateEmail(user.email)
+//                if (authResult.isFailure) {
+//                    Log.d("UserViewModel", "Gagal mengganti email: $authResult")
+//                    _updateState.value = UiState.Empty
+//                    _updateState.value = UiState.Error(
+//                        "Gagal mengganti email. Silakan coba lagi"
 //                    )
 //                    return@launch
 //                }
-//
+//            }
 
+            val setUser = UpdateUser(
+                id = user.id,
+//                name = user.name.lowercase().replaceFirstChar { it.uppercase() },
+                fatherName = user.fatherName.lowercase().replaceFirstChar { it.uppercase() },
+//                nik = user.nik,
+//                kk = user.kk.orEmpty(),
+//                email = user.email,
+                phone = user.phone,
+                address = user.address.lowercase().replaceFirstChar { it.uppercase() },
+                isWhitoutNik = false,
+                isExampleEmail = false
+            )
+            val response = userService.updateUser(setUser)
+            response.onSuccess { user ->
+                Log.d("UserViewModel", "SUKSES Update profil User, refresh user : ${user.name}")
+                _updateState.value = UiState.Success("Update profil sukses")
+                val id = user.id
+                getUserById(id)
+            }.onFailure {
+                Log.d("UserViewModel", "Update profil GAGAL: $it")
+                _updateState.value = UiState.Empty
+                _updateState.value = UiState.Error("Gagal update profil")
+            }
+        }
+    }
+
+}
 

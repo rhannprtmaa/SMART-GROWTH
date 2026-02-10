@@ -31,13 +31,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import id.co.mondo.ukhuwah.data.model.InsertUser
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.ButtonCustom
-import id.co.mondo.ukhuwah.ui.components.GenderField
 import id.co.mondo.ukhuwah.ui.components.TextFieldCustom
-import id.co.mondo.ukhuwah.ui.components.TextFieldDateCustom
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.viewmodel.AuthViewModel
 
@@ -55,9 +52,9 @@ fun RegisterScreen(
     var password: String by rememberSaveable { mutableStateOf("") }
     var confirmPassword: String by rememberSaveable { mutableStateOf("") }
     var name: String by rememberSaveable { mutableStateOf("") }
+    var fatherName: String by rememberSaveable { mutableStateOf("") }
     var nik: String by rememberSaveable { mutableStateOf("") }
-    var gender: String by rememberSaveable { mutableStateOf("") }
-    var birthDate by rememberSaveable { mutableStateOf("") }
+    var kk: String by rememberSaveable { mutableStateOf("") }
     var phone: String by rememberSaveable { mutableStateOf("") }
     var address: String by rememberSaveable { mutableStateOf("") }
 
@@ -71,8 +68,6 @@ fun RegisterScreen(
             !showConfirmPasswordError &&
             name.isNotEmpty() &&
             nik.isNotEmpty() &&
-            gender.isNotEmpty() &&
-            birthDate.isNotEmpty() &&
             phone.isNotEmpty() &&
             address.isNotEmpty()
 
@@ -156,11 +151,31 @@ fun RegisterScreen(
                     TextFieldCustom(
                         modifier = Modifier.fillMaxWidth(),
                         values = name,
-                        label = "Nama Orang Tua",
+                        label = "Nama Ibu",
                         onValueChange = {
                             name = it
                         },
                         keyboardType = KeyboardType.Text,
+                        singleLine = true,
+                    )
+                    TextFieldCustom(
+                        modifier = Modifier.fillMaxWidth(),
+                        values = fatherName,
+                        label = "Nama Ayah",
+                        onValueChange = {
+                            fatherName = it
+                        },
+                        keyboardType = KeyboardType.Text,
+                        singleLine = true,
+                    )
+                    TextFieldCustom(
+                        modifier = Modifier.fillMaxWidth(),
+                        values = kk,
+                        label = "KK",
+                        onValueChange = {
+                            kk = it
+                        },
+                        keyboardType = KeyboardType.Number,
                         singleLine = true,
                     )
                     TextFieldCustom(
@@ -172,18 +187,6 @@ fun RegisterScreen(
                         },
                         keyboardType = KeyboardType.Number,
                         singleLine = true,
-                    )
-                    GenderField(
-                        selectedGender = gender,
-                        onGenderSelected = {
-                            gender = it
-                        }
-                    )
-                    TextFieldDateCustom(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = birthDate,
-                        label = "Tanggal Lahir",
-                        onDateSelected = { birthDate = it }
                     )
                     TextFieldCustom(
                         modifier = Modifier.fillMaxWidth(),
@@ -279,21 +282,26 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     label = "Daftar",
                     onClick = {
-                        authViewModel.createAccount(
-                            email = email,
-                            password = password,
-                            confirmPassword = confirmPassword,
-                            user = InsertUser(
-                                name = name,
-                                nik = nik,
-                                gender = gender,
-                                birth = birthDate,
-                                phone = phone,
-                                address = address,
-                            )
-                        )
+                        Toast.makeText(
+                            context,
+                            "Dalam pengembangan mohon maaf",
+                            Toast.LENGTH_SHORT
+                        ).show()
+//                        authViewModel.createAccount(
+//                            InsertUser(
+//                                name = name,
+//                                fatherName = fatherName,
+//                                password = password,
+//                                confirmPassword = confirmPassword,
+//                                nik = nik,
+//                                kk = kk,
+//                                phone = phone,
+//                                address = address,
+//                                email = email
+//                            )
+//                        )
                     },
-                    enabled = isFormValid
+//                    enabled = isFormValid
                 )
             }
         }

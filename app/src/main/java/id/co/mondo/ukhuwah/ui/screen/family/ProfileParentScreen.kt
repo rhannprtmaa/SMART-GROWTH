@@ -36,13 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import id.co.mondo.ukhuwah.data.model.InsertUpdateUser
 import id.co.mondo.ukhuwah.data.model.User
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.CardListCard
-import id.co.mondo.ukhuwah.ui.components.GenderField
 import id.co.mondo.ukhuwah.ui.components.TextFieldCustom
-import id.co.mondo.ukhuwah.ui.components.TextFieldDateCustom
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.viewmodel.UserViewModel
 
@@ -57,12 +56,13 @@ fun ProfileParentScreen(
 
     val userViewModel: UserViewModel = viewModel()
     val state by userViewModel.userId.collectAsState()
+    val updateState by userViewModel.updateState.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var fatherName by remember { mutableStateOf("") }
     var nik by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf("") }
+    var kk by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
 
@@ -79,14 +79,51 @@ fun ProfileParentScreen(
         if (state is UiState.Success) {
             val users = (state as UiState.Success<User>).data
 
-            name = users.name.orEmpty()
+            name = users.name
+            fatherName = users.fatherName.orEmpty()
             nik = users.nik.orEmpty()
-            birthDate = users.birth.orEmpty()
-            gender = users.gender.orEmpty()
+            kk = users.nik.orEmpty()
             phone = users.phone.orEmpty()
-            address = users.address.orEmpty()
-            email = users.email.orEmpty()
+            address = users.address
+            email = users.email
+        }
+    }
 
+    LaunchedEffect(state) {
+        if (state is UiState.Error) {
+            Toast.makeText(
+                context,
+                (state as UiState.Error).message,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    LaunchedEffect(updateState) {
+        when (updateState) {
+            is UiState.Success -> {
+                Toast.makeText(
+                    context,
+                    (updateState as UiState.Success).data,
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                enabled = false
+                isEditMode = false
+            }
+
+            is UiState.Error -> {
+                Toast.makeText(
+                    context,
+                    (updateState as UiState.Error).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                enabled = true
+                isEditMode = true
+            }
+
+            else -> Unit
         }
     }
 
@@ -106,18 +143,17 @@ fun ProfileParentScreen(
                 Button(
                     onClick = {
                         userViewModel.updateUser(
-                            User(
-                                id_users = idUser,
-                                name = name,
-                                nik = nik,
-                                gender = gender,
-                                birth = birthDate,
+                            InsertUpdateUser(
+                                id = idUser,
+//                                name = name,
+                                fatherName = fatherName,
+//                                nik = nik,
+                                kk = kk,
+//                                email = email,
                                 phone = phone,
-                                address = address,
+                                address = address
                             )
                         )
-                        enabled = false
-                        isEditMode = false
                         showDialog = false
                     }
                 ) {
@@ -150,6 +186,17 @@ fun ProfileParentScreen(
         )
     }
 
+//    if (updateState is UiState.Loading) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize(),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            CircularProgressIndicator(
+//                color = MaterialTheme.colorScheme.secondary
+//            )
+//        }
+//    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -172,12 +219,25 @@ fun ProfileParentScreen(
                 }
             }
         )
-        when (state) {
+
+        when (val user = state) {
+            is UiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
 
             is UiState.Success -> {
-                val user = (state as UiState.Success<User>).data
+
+                val user = user.data
                 val children = user.children ?: emptyList()
-                val shorted = children.sortedByDescending{ it.created_at }
+
 
                 LazyColumn(
                     modifier = Modifier
@@ -198,10 +258,20 @@ fun ProfileParentScreen(
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
                                 values = name,
-                                label = "Nama Orang Tua",
+                                label = "Nama Ibu",
                                 onValueChange = {
                                     name = it
 
+                                },
+                                keyboardType = KeyboardType.Text,
+                                enabled = false
+                            )
+                            TextFieldCustom(
+                                modifier = Modifier.fillMaxWidth(),
+                                values = fatherName,
+                                label = "Nama Ayah",
+                                onValueChange = {
+                                    fatherName = it
                                 },
                                 keyboardType = KeyboardType.Text,
                                 enabled = enabled
@@ -214,7 +284,17 @@ fun ProfileParentScreen(
                                     nik = it
                                 },
                                 keyboardType = KeyboardType.Number,
-                                enabled = enabled
+                                enabled = false
+                            )
+                            TextFieldCustom(
+                                modifier = Modifier.fillMaxWidth(),
+                                values = kk,
+                                label = "KK",
+                                onValueChange = {
+                                    kk = it
+                                },
+                                keyboardType = KeyboardType.Number,
+                                enabled = false
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -225,23 +305,6 @@ fun ProfileParentScreen(
                                 },
                                 keyboardType = KeyboardType.Email,
                                 enabled = false
-                            )
-                            GenderField(
-                                selectedGender = gender,
-                                onGenderSelected = {
-                                    gender = it
-                                },
-                                enabled = enabled
-                            )
-                            TextFieldDateCustom(
-                                modifier = Modifier.fillMaxWidth(),
-                                value = birthDate,
-                                label = "Tanggal Lahir",
-                                onDateSelected = {
-                                    birthDate = it
-
-                                },
-                                enabled = enabled
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -290,7 +353,8 @@ fun ProfileParentScreen(
                         }
                     }
 
-                    if (shorted.isEmpty()) {
+
+                    if (children.isEmpty()) {
                         item {
                             Text(
                                 text = "Belum ada data anak",
@@ -302,9 +366,9 @@ fun ProfileParentScreen(
                             )
                         }
                     } else {
-                        items(shorted) { child ->
+                        items(children) { child ->
                             CardListCard(
-                                name = child.name ?: "Nama Anak",
+                                name = child.nameChild,
                                 onClick = {
                                     navController.navigate("profile-children/${child.id}")
                                 },
@@ -313,40 +377,9 @@ fun ProfileParentScreen(
                         }
                     }
                 }
-            }
 
-            is UiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
             }
-
-            is UiState.Error -> {
-                Toast.makeText(
-                    context,
-                    (state as UiState.Error).message,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            is UiState.Empty -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Tidak ada data",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-            }
+            else -> Unit
         }
     }
 }

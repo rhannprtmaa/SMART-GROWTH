@@ -65,10 +65,11 @@ fun NewMeasureChildrenScreen(
 
     val childViewModel: ChildViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
-    val newMeasureState by childViewModel.newMeasureState.collectAsState()
-    val userState by userViewModel.userState.collectAsState()
-    val insertNewMeasureState by childViewModel.insertNewMeasureState.collectAsState()
 
+    val selectUser by userViewModel.selectedUser.collectAsState()
+    val userByIdState by userViewModel.userId.collectAsState()
+
+    val insertNewMeasureState by childViewModel.insertNewMeasureState.collectAsState()
 
     var measureDate by remember { mutableStateOf("") }
     var tb by remember { mutableStateOf("") }
@@ -80,12 +81,14 @@ fun NewMeasureChildrenScreen(
 
     var isSearchMode by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+
+    var selectUserId by remember { mutableStateOf<String?>(null) }
     var selectChildId by remember { mutableStateOf<Int?>(null) }
     val enabled = selectChildId != null
 
 
     LaunchedEffect(Unit) {
-        userViewModel.getAllUser()
+        userViewModel.selectUser()
     }
 
     LaunchedEffect(insertNewMeasureState) {
@@ -115,49 +118,40 @@ fun NewMeasureChildrenScreen(
         }
     }
 
-
-    if (newMeasureState is UiState.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.secondary
-            )
+    LaunchedEffect(selectUserId) {
+        selectUserId?.let { id ->
+            userViewModel.getUserById(id)
         }
     }
 
-    if (insertNewMeasureState is UiState.Loading) {
+    val isLoading =
+        userByIdState is UiState.Loading ||
+                insertNewMeasureState is UiState.Loading
+
+    if (isLoading) {
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.secondary
-            )
+            CircularProgressIndicator()
         }
     }
 
-    val userList = when (userState) {
-        is UiState.Success -> (userState as UiState.Success).data
+    val userList = when (selectUser) {
+        is UiState.Success -> (selectUser as UiState.Success).data
         else -> emptyList()
     }
 
     val filteredUsers = if (searchQuery.isBlank()) {
         userList
     } else {
-        userList.filter {
-            it.name
-                ?.contains(searchQuery, ignoreCase = true)
-                ?: false
+        userList.filter { it.name.contains(searchQuery, ignoreCase = true)
         }
     }
 
-    val users = when (newMeasureState) {
-        is UiState.Success -> (newMeasureState as UiState.Success).data
-        else -> childViewModel.defaultSelectUser()
+    val users = when (userByIdState) {
+        is UiState.Success -> (userByIdState as UiState.Success).data
+        else -> null
     }
 
     Box(
@@ -201,27 +195,38 @@ fun NewMeasureChildrenScreen(
                         )
                         TextFieldCustom(
                             modifier = Modifier.fillMaxWidth(),
-                            values = users.name ?: "",
-                            label = "Nama Orang Tua",
+                            values = users?.name ?: "",
+                            label = "Nama Ibu",
                             onValueChange = {
 
                             },
                             keyboardType = KeyboardType.Text,
                             enabled = false
                         )
-                        TextFieldDateCustom(
+                        TextFieldCustom(
                             modifier = Modifier.fillMaxWidth(),
-                            value = users.birth ?: "",
-                            label = "Tanggal Lahir",
-                            onDateSelected = {
+                            values = users?.fatherName ?: "",
+                            label = "Nama Ayah",
+                            onValueChange = {
 
                             },
+                            keyboardType = KeyboardType.Text,
                             enabled = false
                         )
                         TextFieldCustom(
                             modifier = Modifier.fillMaxWidth(),
-                            values = users.phone ?: "",
+                            values = users?.phone ?: "",
                             label = "No. Handphone",
+                            onValueChange = {
+
+                            },
+                            keyboardType = KeyboardType.Number,
+                            enabled = false
+                        )
+                        TextFieldCustom(
+                            modifier = Modifier.fillMaxWidth(),
+                            values = users?.address ?: "",
+                            label = "Alamat",
                             onValueChange = {
 
                             },
@@ -237,7 +242,7 @@ fun NewMeasureChildrenScreen(
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.Black
                         )
-                        if (users.children.isNullOrEmpty()) {
+                        if (users?.children.isNullOrEmpty()) {
                             Text(
                                 text = "Belum ada data anak",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -247,7 +252,7 @@ fun NewMeasureChildrenScreen(
                             users.children.forEach { child ->
                                 val isSelected = selectChildId == child.id
                                 CardListCard(
-                                    name = child.name ?: "",
+                                    name = child.nameChild,
                                     ageResult = child.ageResult,
                                     onClick = {
                                         selectChildId = child.id
@@ -455,9 +460,7 @@ fun NewMeasureChildrenScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
-                                                // ✅ pilih user
-                                                childViewModel.selectUserWithChild(user.id_users)
-
+                                                selectUserId = user.id
                                                 selectChildId = null
 
                                                 isSearchMode = false

@@ -1,8 +1,6 @@
 package id.co.mondo.ukhuwah.ui.screen.detail
 
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +15,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +37,6 @@ import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DetailScreen(
     navController: NavController,
@@ -52,18 +48,18 @@ fun DetailScreen(
 
     val childViewModel: ChildViewModel = viewModel()
     val measuredChildState by childViewModel.childWithMeasureState.collectAsState()
-    val childState by childViewModel.childState.collectAsState()
+
+    val childState by childViewModel.allChildState.collectAsState()
 
 
     val tabs = listOf("Statistik", "Perjalanan")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
 
-    var selectedChild by remember { mutableStateOf(-1) }
 
-    LaunchedEffect(Unit) {
-        childViewModel.getAllChild()
-    }
+
+
+    var selectedChild by remember { mutableStateOf(-1) }
 
     val childrenForSelect = when (childState) {
         is UiState.Success -> (childState as UiState.Success).data
@@ -88,7 +84,7 @@ fun DetailScreen(
             selectedChild = child,
             onChildSelected = { id ->
                 selectedChild = id
-                childViewModel.getChildMeasure(id)
+                childViewModel.getChildWithMeasure(id)
             },
             children = childrenForSelect
         )
@@ -131,8 +127,20 @@ fun DetailScreen(
                 )
             }
         }
-        when (measuredChildState) {
-            is UiState.Loading -> {
+        when {
+            selectedChild  == -1 -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Silahkan pilih Profile Anak",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            }
+            measuredChildState is UiState.Loading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -144,7 +152,7 @@ fun DetailScreen(
                 }
             }
 
-            is UiState.Success -> {
+            measuredChildState is UiState.Success -> {
                 val child = (measuredChildState as UiState.Success).data
 
                 when (selectedTabIndex) {
@@ -159,20 +167,20 @@ fun DetailScreen(
                 }
             }
 
-            is UiState.Empty -> {
+            measuredChildState is UiState.Empty -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Tidak ada data",
+                        text = "Belum ada data pengukuran",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
             }
 
-            is UiState.Error -> {
+            measuredChildState is UiState.Error -> {
                 Toast.makeText(
                     context,
                     (measuredChildState as UiState.Error).message,
@@ -184,7 +192,6 @@ fun DetailScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun PreviewDetailScreen() {

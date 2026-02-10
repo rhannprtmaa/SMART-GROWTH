@@ -1,5 +1,7 @@
 package id.co.mondo.ukhuwah.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,21 +25,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.co.mondo.ukhuwah.R
+import id.co.mondo.ukhuwah.data.model.Article
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 
 @Composable
-fun ArticleItemCard(modifier: Modifier = Modifier) {
+fun ArticleItemCard(
+    modifier: Modifier = Modifier,
+    item: Article,
+) {
+    val context = LocalContext.current
+
     Card(
         modifier = modifier
             .clickable(
                 onClick = {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(item.url)
+                    )
+                    context.startActivity(intent)
                 }
             ),
         shape = RoundedCornerShape(12.dp),
@@ -50,7 +64,7 @@ fun ArticleItemCard(modifier: Modifier = Modifier) {
     ) {
         Column(Modifier.fillMaxSize(),verticalArrangement = Arrangement.SpaceBetween) {
             Image(
-                painter = painterResource(R.drawable.bubur),
+                painter = painterResource(item.image),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -58,11 +72,11 @@ fun ArticleItemCard(modifier: Modifier = Modifier) {
                     .height(125.dp)
             )
             Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp).padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp, alignment = Alignment.Bottom)
             ) {
                 Text(
-                    text = "Kebijakan stunting yang tidak membahas anak yang ‘Sedang’ Stungting",
+                    text = item.title,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = 10.sp
                     ),
@@ -125,7 +139,8 @@ fun PreviewArticleItemCard() {
         Column(Modifier.fillMaxSize()) {
             ArticleItemCard(
                 modifier = Modifier
-                    .size(width = 250.dp, height = 200.dp )
+                    .size(width = 250.dp, height = 200.dp ),
+                item = Article.ONE
             )
         }
     }

@@ -58,7 +58,7 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
         }
 
         if (!isLoggedIn) {
-            if (currentRoute != "login" && currentRoute != "register") {
+            if (currentRoute != "login") {
                 navController.navigate("login") {
                     popUpTo(0) { inclusive = true }
                 }
@@ -77,7 +77,7 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
             "home"
         }
 
-        if (currentRoute == "login" || currentRoute == "register" || currentRoute == null) {
+        if (currentRoute == "login") {
             navController.navigate(target) {
                 popUpTo(0) { inclusive = true }
                 launchSingleTop = true
@@ -111,7 +111,7 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
             ) {
 //            Auth
             composable("login") {
-                LoginScreen( authViewModel)
+                LoginScreen(authViewModel)
             }
             composable("register") {
                 RegisterScreen(
@@ -145,10 +145,20 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
                     contentPadding = innerPadding
                 )
             }
-            composable("detail-mpasi") {
+            composable(
+                route = "detail-mpasi/{id}",
+                arguments = listOf(
+                    navArgument("id") {
+                        type = NavType.IntType
+                    }
+                )
+
+            ) {
+                val id = it.arguments?.getInt("id")
                 DetailMpasiScreen(
                     navController = navController,
-                    contentPadding = innerPadding
+                    contentPadding = innerPadding,
+                    id = id ?: 0
                 )
             }
 //            Parent
