@@ -106,7 +106,6 @@ class ChildService {
                 birth,
                 heightCm,
                 weightKg,
-                armCm,
                 headCm,
                 created_at
                 """.trimIndent()

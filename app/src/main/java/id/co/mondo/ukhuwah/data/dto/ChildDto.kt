@@ -93,9 +93,6 @@ data class ChildDto(
     @SerialName("weightKg")
     val weightKg: Double?,
 
-    @SerialName("armCm")
-    val armCm: Double?,
-
     @SerialName("headCm")
     val headCm: Double?,
 )
