@@ -9,18 +9,21 @@ data class User(
     val fatherName: String?,
     val email: String,
     val nik: String?,
+    val kk: String?,
     val phone: String?,
     val address: String,
+    val isExampleEmail: Boolean,
+    val isWhitoutNik: Boolean,
     val children: List<ListChild>?
 )
 
 @Serializable
 data class InsertUpdateUser(
     val id: String,
-//    val name: String,
-    val fatherName: String,
-//    val email: String,
-//    val nik: String,
+    val name: String,
+    val fatherName: String?,
+    val email: String,
+    val nik: String,
     val kk: String?,
     val phone: String,
     val address: String
@@ -70,8 +73,8 @@ data class InsertUser(
 
 @Serializable
 data class RoleUser(
-    val id_users: String? = null,
-    val name: String? = null,
+    val id_users: String,
+    val name: String,
     val role: String,
 )
 

@@ -23,7 +23,8 @@ import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 
 @Composable
 fun CardAccount(
-    navController: NavController
+    navController: NavController,
+    id: String
 ) {
     Column(
         modifier = Modifier
@@ -56,7 +57,7 @@ fun CardAccount(
                     icon = painterResource(R.drawable.profile),
                     title = "Profile",
                     onClick = {
-
+                        navController.navigate("profile-parent/$id")
                     }
                 )
                 SettingItem(
@@ -66,13 +67,13 @@ fun CardAccount(
 
                     }
                 )
-                SettingItem(
-                    icon = painterResource(R.drawable.frame),
-                    title = "Tema",
-                    onClick = {
-
-                    }
-                )
+//                SettingItem(
+//                    icon = painterResource(R.drawable.frame),
+//                    title = "Tema",
+//                    onClick = {
+//
+//                    }
+//                )
 
             }
         }
@@ -85,7 +86,8 @@ fun CardAccount(
 fun PreviewSettingCard() {
     Innovillage6thTheme() {
          CardAccount(
-             navController = rememberNavController()
+             navController = rememberNavController(),
+             id = ""
          )
      }
 }

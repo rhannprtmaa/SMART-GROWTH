@@ -163,6 +163,7 @@ class ChildViewModel(
                 val response = ChildWithMeasured(
                     id = data.id,
                     name = data.name,
+                    gender = data.gender,
                     ageResult = ageResult,
                     measurement = ChildMeasure(
                         id = latestMeasure.id,

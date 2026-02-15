@@ -43,6 +43,8 @@ data class ChildWithMeasureDto(
     val id: Int,
     @SerialName("name")
     val name: String,
+    @SerialName("gender")
+    val gender: String,
     @SerialName("birth")
     val birth: String,
     @SerialName("measurements")

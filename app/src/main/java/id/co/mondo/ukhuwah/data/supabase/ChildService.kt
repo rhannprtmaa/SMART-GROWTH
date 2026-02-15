@@ -43,6 +43,7 @@ class ChildService {
                 """
                 id,
                 name,
+                gender,
                 birth,
                 measurements(
                     id,
@@ -133,6 +134,7 @@ class ChildService {
                 """
                 id,
                 name,
+                gender,
                 birth,
                 measurements(
                     id,

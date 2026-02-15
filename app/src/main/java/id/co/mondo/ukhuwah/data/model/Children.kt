@@ -91,6 +91,7 @@ data class ListMeasure(
 data class ChildWithMeasured(
     val id: Int,
     val name: String,
+    val gender: String,
     val ageResult: AgeResult,
     val measurement: ChildMeasure?
 )

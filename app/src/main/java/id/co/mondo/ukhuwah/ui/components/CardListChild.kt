@@ -143,7 +143,9 @@ fun PreviewChildrenCard() {
                 ageResult = AgeResult(
                     years = 0,
                     months = 0,
-                    days = 0
+                    days = 0,
+                    totalMonths = 0,
+                    monthAndDays = ""
                 )
             )
         }

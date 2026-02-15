@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import id.co.mondo.ukhuwah.data.model.InsertUser
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.ButtonCustom
@@ -282,26 +283,26 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     label = "Daftar",
                     onClick = {
-                        Toast.makeText(
-                            context,
-                            "Dalam pengembangan mohon maaf",
-                            Toast.LENGTH_SHORT
-                        ).show()
-//                        authViewModel.createAccount(
-//                            InsertUser(
-//                                name = name,
-//                                fatherName = fatherName,
-//                                password = password,
-//                                confirmPassword = confirmPassword,
-//                                nik = nik,
-//                                kk = kk,
-//                                phone = phone,
-//                                address = address,
-//                                email = email
-//                            )
-//                        )
+//                        Toast.makeText(
+//                            context,
+//                            "Dalam pengembangan mohon maaf",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+                        authViewModel.createNewAccount(
+                            InsertUser(
+                                name = name,
+                                fatherName = fatherName,
+                                password = password,
+                                confirmPassword = confirmPassword,
+                                nik = nik,
+                                kk = kk,
+                                phone = phone,
+                                address = address,
+                                email = email
+                            )
+                        )
                     },
-//                    enabled = isFormValid
+                    enabled = isFormValid
                 )
             }
         }

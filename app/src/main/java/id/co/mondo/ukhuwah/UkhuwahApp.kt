@@ -203,7 +203,8 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
                 ProfileParentScreen(
                     navController = navController,
                     idUser = id ?: "",
-                    contentPadding = innerPadding
+                    contentPadding = innerPadding,
+                    authViewModel = authViewModel
                 )
             }
             composable(

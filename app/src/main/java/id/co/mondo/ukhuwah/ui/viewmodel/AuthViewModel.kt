@@ -36,6 +36,9 @@ class AuthViewModel(
     private val _userRole = MutableStateFlow<String?>(null)
     val userRole = _userRole.asStateFlow()
 
+    private val _userId = MutableStateFlow<String>("")
+    val useId = _userId.asStateFlow()
+
     init {
         viewModelScope.launch {
             val loggedIn = authService.restoreSession()
@@ -53,6 +56,7 @@ class AuthViewModel(
         result.onSuccess { user ->
             Log.d("AuthViewModel", "Role user = $user")
             _userRole.value = user.role
+            _userId.value = user.id_users
             _isLoggedIn.value = true
         }.onFailure {
             Log.e("AuthViewModel", "Gagal ambil role", it)
@@ -121,7 +125,75 @@ class AuthViewModel(
         }
     }
 
-    fun createAccount(
+//    fun createAccount(
+//        user: InsertUser
+//    ) {
+//        _registerState.value = UiState.Loading
+//
+//        viewModelScope.launch {
+//
+//            if (user.email.isBlank()) {
+//                _registerState.value = UiState.Error("Email wajib diisi")
+//                return@launch
+//            }
+//
+//            if (user.password.length < 6) {
+//                _registerState.value = UiState.Error("Password minimal 6 karakter")
+//                return@launch
+//            }
+//            if (user.password != user.confirmPassword) {
+//                _registerState.value = UiState.Error("Password tidak sama")
+//                return@launch
+//            }
+//
+//            if (
+//                user.name.isNullOrBlank() ||
+//                user.nik.isNullOrBlank() ||
+//                user.phone.isNullOrBlank() ||
+//                user.address.isNullOrBlank()
+//            ) {
+//                _registerState.value =
+//                    UiState.Error("Semua data user wajib diisi")
+//                return@launch
+//            }
+//
+//            val responseAuth = authService.register(user.email, user.password)
+//            responseAuth.onSuccess { account ->
+//                val setUser = InsertUserDto(
+//                    id = account.id,
+//                    name = user.name,
+//                    fatherName = user.fatherName.orEmpty(),
+//                    nik = user.nik,
+//                    kk = user.kk.orEmpty(),
+//                    email = account.email,
+//                    phone = user.phone,
+//                    address = user.address
+//                        .lowercase()
+//                        .replaceFirstChar { it.uppercase() },
+//                    isExampleEmail = false,
+//                    isWhitoutNik = false
+//                )
+//
+//                val responseUser = userService.createUser(setUser)
+//                responseUser.onSuccess {
+//                    _registerState.value = UiState.Success("Buat Akun User Berhasil")
+//                    Log.d("CreateAccount", "Buat Akun user berhasil $setUser")
+//                }.onFailure {
+//                    Log.d("CreateAccount", "Gagal Menyimpan Profile $setUser")
+//                    val deleteAuth = authService.deleteUser(account.id)
+//                    Log.d("CreateAccount", "Hapus Akun di Auth berhasil $deleteAuth")
+//                    _registerState.value = UiState.Error("Gagal Membuat Akun User")
+//                }
+//            }.onFailure {
+//                Log.d("CreateAccount", "Error: ${it.message}")
+//                _registerState.value = UiState.Error(it.message ?: "Gagal Membuat Akun")
+//                return@launch
+//            }
+//
+//        }
+//    }
+
+    fun createNewAccount(
         user: InsertUser
     ) {
         _registerState.value = UiState.Loading
@@ -152,40 +224,30 @@ class AuthViewModel(
                     UiState.Error("Semua data user wajib diisi")
                 return@launch
             }
+            val setUser = InsertUserDto(
+                name = user.name,
+                fatherName = user.fatherName.orEmpty(),
+                nik = user.nik,
+                kk = user.kk.orEmpty(),
+                email = user.email,
+                password = user.password,
+                phone = user.phone,
+                address = user.address
+                    .lowercase()
+                    .replaceFirstChar { it.uppercase() },
+                isExampleEmail = false,
+                isWhitoutNik = false
+            )
 
-            val responseAuth = authService.register(user.email, user.password)
-            responseAuth.onSuccess { account ->
-                val setUser = InsertUserDto(
-                    id = account.id,
-                    name = user.name,
-                    fatherName = user.fatherName.orEmpty(),
-                    nik = user.nik,
-                    kk = user.kk.orEmpty(),
-                    email = account.email,
-                    phone = user.phone,
-                    address = user.address
-                        .lowercase()
-                        .replaceFirstChar { it.uppercase() },
-                    isExampleEmail = false,
-                    isWhitoutNik = false
-                )
-
-                val responseUser = userService.createUser(setUser)
-                responseUser.onSuccess {
-                    _registerState.value = UiState.Success("Buat Akun User Berhasil")
-                    Log.d("CreateAccount", "Buat Akun user berhasil $setUser")
-                }.onFailure {
-                    Log.d("CreateAccount", "Gagal Menyimpan Profile $setUser")
-                    val deleteAuth = authService.deleteUser(account.id)
-                    Log.d("CreateAccount", "Hapus Akun di Auth berhasil $deleteAuth")
-                    _registerState.value = UiState.Error("Gagal Membuat Akun User")
-                }
+            val responseUser = userService.createNewUser(setUser)
+            responseUser.onSuccess {
+                _registerState.value = UiState.Success("Buat Akun User Berhasil")
+                Log.d("CreateAccount", "Buat Akun user berhasil $setUser")
             }.onFailure {
-                Log.d("CreateAccount", "Error: ${it.message}")
-                _registerState.value = UiState.Error(it.message ?: "Gagal Membuat Akun")
-                return@launch
+                Log.d("CreateAccount", "Gagal Menyimpan Profile $setUser")
+                Log.d("CreateAccount", "Gagal Menyimpan Profile $it")
+                _registerState.value = UiState.Error("Gagal Membuat Akun User")
             }
-
         }
     }
 

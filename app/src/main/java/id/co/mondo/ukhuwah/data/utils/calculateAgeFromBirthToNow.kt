@@ -9,7 +9,7 @@ fun calculateAgeFromBirthToNow(
 ): AgeResult {
 
     if (birth.isNullOrBlank() || birth == "-") {
-        return AgeResult(0, 0, 0)
+        return AgeResult(0, 0, 0, 0, "0 bulan 0 hari")
     }
 
     val birthDate = LocalDate.parse(birth.take(10))
@@ -17,9 +17,19 @@ fun calculateAgeFromBirthToNow(
 
     val period = Period.between(birthDate, today)
 
+    val years = period.years
+    val months = period.months
+    val days = period.days
+
+    val totalMonths = (years * 12) + months
+
+    val monthAndDays = "$totalMonths bulan $days hari"
+
     return AgeResult(
         years = period.years,
         months = period.months,
-        days = period.days
+        days = period.days,
+        totalMonths = totalMonths,
+        monthAndDays = monthAndDays
     )
 }

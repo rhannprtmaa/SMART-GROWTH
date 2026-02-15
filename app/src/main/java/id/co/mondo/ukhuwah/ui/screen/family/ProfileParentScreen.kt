@@ -43,12 +43,14 @@ import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.CardListCard
 import id.co.mondo.ukhuwah.ui.components.TextFieldCustom
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
+import id.co.mondo.ukhuwah.ui.viewmodel.AuthViewModel
 import id.co.mondo.ukhuwah.ui.viewmodel.UserViewModel
 
 @Composable
 fun ProfileParentScreen(
     navController: NavController,
     idUser: String,
+    authViewModel: AuthViewModel,
     contentPadding: PaddingValues
 ) {
 
@@ -57,6 +59,7 @@ fun ProfileParentScreen(
     val userViewModel: UserViewModel = viewModel()
     val state by userViewModel.userId.collectAsState()
     val updateState by userViewModel.updateState.collectAsState()
+    val userRole by authViewModel.userRole.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -82,7 +85,7 @@ fun ProfileParentScreen(
             name = users.name
             fatherName = users.fatherName.orEmpty()
             nik = users.nik.orEmpty()
-            kk = users.nik.orEmpty()
+            kk = users.kk.orEmpty()
             phone = users.phone.orEmpty()
             address = users.address
             email = users.email
@@ -119,8 +122,8 @@ fun ProfileParentScreen(
                     Toast.LENGTH_SHORT
                 ).show()
 
-                enabled = true
-                isEditMode = true
+                enabled = false
+                isEditMode = false
             }
 
             else -> Unit
@@ -145,15 +148,17 @@ fun ProfileParentScreen(
                         userViewModel.updateUser(
                             InsertUpdateUser(
                                 id = idUser,
-//                                name = name,
+                                name = name,
                                 fatherName = fatherName,
-//                                nik = nik,
+                                nik = nik,
                                 kk = kk,
-//                                email = email,
+                                email = email,
                                 phone = phone,
                                 address = address
                             )
                         )
+                        enabled = false
+                        isEditMode = false
                         showDialog = false
                     }
                 ) {
@@ -203,7 +208,7 @@ fun ProfileParentScreen(
             .padding(contentPadding),
     ) {
         AppTopBar(
-            title = "Profile Keluarga",
+            title = "Profile Orang Tua",
             showBack = true,
             onBackClick = {
                 navController.popBackStack()
@@ -264,7 +269,7 @@ fun ProfileParentScreen(
 
                                 },
                                 keyboardType = KeyboardType.Text,
-                                enabled = false
+                                enabled = enabled
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -284,7 +289,7 @@ fun ProfileParentScreen(
                                     nik = it
                                 },
                                 keyboardType = KeyboardType.Number,
-                                enabled = false
+                                enabled = enabled
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -294,7 +299,7 @@ fun ProfileParentScreen(
                                     kk = it
                                 },
                                 keyboardType = KeyboardType.Number,
-                                enabled = false
+                                enabled = enabled
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -304,7 +309,7 @@ fun ProfileParentScreen(
                                     email = it
                                 },
                                 keyboardType = KeyboardType.Email,
-                                enabled = false
+                                enabled = enabled
                             )
                             TextFieldCustom(
                                 modifier = Modifier.fillMaxWidth(),
@@ -338,18 +343,20 @@ fun ProfileParentScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.Black
                             )
-                            Text(
-                                text = "Tambah",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    textDecoration = TextDecoration.Underline
-                                ),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable(
-                                    onClick = {
-                                        navController.navigate("add-children")
-                                    }
+                            if(userRole == "Admin"){
+                                Text(
+                                    text = "Tambah",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        textDecoration = TextDecoration.Underline
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable(
+                                        onClick = {
+                                            navController.navigate("add-children")
+                                        }
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
 
@@ -392,7 +399,8 @@ fun PreviewProfileFamilyScreen() {
         ProfileParentScreen(
             navController = rememberNavController(),
             idUser = "",
-            contentPadding = PaddingValues()
+            contentPadding = PaddingValues(),
+            authViewModel = viewModel()
         )
     }
 }

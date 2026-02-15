@@ -408,8 +408,8 @@ fun NewMeasureChildrenScreen(
                                 measured_at = measureDate,
                                 heightCm = tb.toDoubleOrNull(),
                                 weightKg = bb.toDoubleOrNull(),
-                                armCm = lk.toDoubleOrNull(),
-                                headCm = lila.toDoubleOrNull(),
+                                armCm = lila.toDoubleOrNull(),
+                                headCm = lk.toDoubleOrNull(),
                             )
                             childViewModel.insertNewMeasure(measure)
                         },

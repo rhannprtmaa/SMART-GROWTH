@@ -64,7 +64,7 @@ fun HomeParentScreen(
     val viewmodel: UserViewModel = viewModel()
     val state by viewmodel.userProfileState.collectAsState()
 
-    var showDialog by remember { mutableStateOf(false)}
+    var showDialog by remember { mutableStateOf(false) }
     var selectedMpasiGuide by remember { mutableIntStateOf(0) }
 
 
@@ -172,7 +172,12 @@ fun HomeParentScreen(
                         }
                     } else {
                         items(child) { child ->
-                            CardChild(child = child)
+                            CardChild(
+                                child = child,
+                                onClick = {
+                                    navController.navigate("profile-children/${child.id}")
+                                }
+                            )
                         }
                     }
                 }

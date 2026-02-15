@@ -30,6 +30,7 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
@@ -37,65 +38,63 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import id.co.mondo.ukhuwah.data.model.ChartData
+import id.co.mondo.ukhuwah.ui.screen.detail.provideMaleBbTb2Year
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.abu
 
 @Composable
 fun BasicLineChart(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    chartData: ChartData,
+    childX: List<Double>,
+    childY: List<Double>
 ) {
     // 1️⃣ Menyimpan & mengelola data chart
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    val x = listOf(
-        45f, 50f, 55f, 60f, 65f, 70f, 75f, 80f, 85f, 90f, 95f, 100f, 105f, 110f
-    )
+    val scrollState = rememberVicoScrollState()
 
-    val line1 = listOf(
-        1.9f, 2.6f, 3.5f, 4.5f, 5.5f, 6.3f, 7.1f, 7.8f, 8.7f, 9.7f, 10.6f, 11.6f, 12.8f, 14f
-    )
+    val x = chartData.xValues
+    val lines = chartData.lines
 
-    val line2 = listOf(
-        2.1f, 2.8f, 3.8f, 4.9f, 5.9f, 6.9f, 7.7f, 8.5f, 9.4f, 10.5f, 11.5f, 12.6f, 14.0f, 15.3f
-    )
-    val line3 = listOf(
-        2.3f, 3.1f, 4.2f, 5.4f, 6.5f, 7.5f, 8.4f, 9.2f, 10.3f, 11.4f, 12.6f, 13.7f, 15.3f, 16.7f
-    )
-    val line4 = listOf(
-        2.5f, 3.4f, 4.5f, 5.9f, 7.1f, 8.2f, 9.1f, 10.1f, 11.2f, 12.5f, 13.7f, 15.0f, 16.7f, 18.3f
-    )
-    val line5 = listOf(
-        2.7f, 3.7f, 5.0f, 6.4f, 7.8f, 9.0f, 10.0f, 11.0f, 12.3f, 13.7f, 15.0f, 16.5f, 18.4f, 20.2f
-    )
-    val line6 = listOf(
-        3.0f, 4.0f, 5.5f, 7.1f, 8.6f, 9.9f, 11.0f, 12.1f, 13.3f, 15.0f, 16.5f, 18.1f, 20.2f, 22.3f
-    )
-    val line7 = listOf(
-        3.3f, 4.5f, 6.1f, 7.8f, 9.5f, 10.9f, 12.2f, 13.4f, 14.7f, 16.5f, 18.2f, 20.0f, 22.4f, 24.7f
-    )
 
 
     // 2️⃣ Mengisi data chart (sekali saat pertama render)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(chartData) {
         modelProducer.runTransaction {
             lineSeries {
-                series(x, line1)
-                series(x, line2)
-                series(x, line3)
-                series(x, line4)
-                series(x, line5)
-                series(x, line6)
-                series(x, line7)
+                lines.forEach { line ->
+                    series(x, line)
+                }
+                series(childX, childY)
             }
         }
     }
 
+    // 🔹 Hitung range dari semua garis
+    val allYValues = chartData.lines.flatten()
+
+    val minY = allYValues.minOrNull() ?: 0.0
+    val maxY = allYValues.maxOrNull() ?: 100.0
+
+    val minX = chartData.xValues.minOrNull() ?: 0.0
+    val maxX = chartData.xValues.maxOrNull() ?: 100.0
+
+// 🔹 Pertimbangkan titik anak juga
+    val childMinY = childY.minOrNull() ?: minY
+    val childMaxY = childY.maxOrNull() ?: maxY
+
+    val finalMinY = minOf(minY, childMinY)
+    val finalMaxY = maxOf(maxY, childMaxY)
+
+
     val lineLayer = rememberLineCartesianLayer(
         rangeProvider = CartesianLayerRangeProvider.fixed(
-            minX = 45.0,
-            maxX = 110.0,
-            minY = 0.0,
-            maxY = 25.0
+            minX = minX,
+            maxX = maxX,
+            minY = (finalMinY - 2),
+            maxY = (finalMaxY + 2)
         ),
         lineProvider = LineCartesianLayer.LineProvider.series(
             // 🔴 Line 1
@@ -148,8 +147,23 @@ fun BasicLineChart(
                 ),
                 fill = LineCartesianLayer.LineFill.single(fill(Color.Black))
             ),
-
-            ),
+            LineCartesianLayer.rememberLine(
+                stroke = LineCartesianLayer.LineStroke.continuous(
+                    thickness = 0.dp
+                ),
+                fill = LineCartesianLayer.LineFill.single(fill(Color.Transparent)),
+                pointProvider = LineCartesianLayer.PointProvider.single(
+                    point = LineCartesianLayer.Point(
+                        component = rememberShapeComponent(
+                            fill = fill(Color.Blue),
+                            strokeFill = fill(Color.White),
+                            strokeThickness = 2.dp
+                        ),
+                        sizeDp = 12f
+                    ),
+                )
+            )
+        ),
     )
 
 
@@ -163,7 +177,7 @@ fun BasicLineChart(
             chart = rememberCartesianChart(
                 lineLayer,
                 startAxis = VerticalAxis.rememberStart(
-                    title = "Berat (kg)",
+                    title = chartData.yLabel,
                     titleComponent = rememberAxisLabelComponent(
                         textSize = 12.sp,
                         color = Color.Black
@@ -192,7 +206,7 @@ fun BasicLineChart(
                     guideline = rememberAxisGuidelineComponent()
                 ),
                 bottomAxis = HorizontalAxis.rememberBottom(
-                    title = "Panjang (cm)",
+                    title = chartData.xLabel,
                     titleComponent = rememberAxisLabelComponent(
                         textSize = 12.sp,
                         color = Color.Black
@@ -207,7 +221,7 @@ fun BasicLineChart(
                 )
             ),
             modelProducer = modelProducer,
-            scrollState = rememberVicoScrollState(),
+            scrollState = scrollState,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(275.dp)
@@ -228,7 +242,10 @@ fun PreviewLinechart() {
             Text("Diagram")
             BasicLineChart(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp),
+                chartData = provideMaleBbTb2Year(),
+                childX = listOf(60.0),
+                childY = listOf(6.0)
             )
         }
     }

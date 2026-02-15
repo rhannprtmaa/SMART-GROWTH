@@ -1,5 +1,6 @@
 package id.co.mondo.ukhuwah.data.dto
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,6 +17,9 @@ data class UserDto(
 
     @SerialName("nik")
     val nik: String?,
+
+    @SerialName("kk")
+    val kk: String?,
 
     @SerialName("email")
     val email: String,
@@ -44,6 +48,37 @@ data class UpdateUserDto(
     @SerialName("name")
     val name: String
 )
+
+@Serializable
+data class UpdateUserRequestDto(
+    @SerializedName("email")
+    val email: String? = null,
+
+    @SerializedName("name")
+    val name: String? = null,
+
+    @SerializedName("nik")
+    val nik: String? = null,
+
+    @SerializedName("phone")
+    val phone: String? = null,
+
+    @SerializedName("address")
+    val address: String? = null,
+
+    @SerializedName("father_name")
+    val fatherName: String? = null,
+
+    @SerializedName("kk")
+    val kk: String? = null,
+
+    @SerializedName("is_example_email")
+    val isExampleEmail: Boolean? = null,
+
+    @SerializedName("is_whitout_nik")
+    val isWhitoutNik: Boolean? = null
+)
+
 
 @Serializable
 data class AllUsersDto(
@@ -121,14 +156,14 @@ data class ListChildDto(
 
 @Serializable
 data class InsertUserDto(
-    @SerialName("id_users")
-    val id: String,
-
     @SerialName("name")
     val name: String,
 
     @SerialName("father_name")
     val fatherName: String?,
+
+    @SerialName("password")
+    val password: String,
 
     @SerialName("nik")
     val nik: String,
@@ -157,7 +192,15 @@ data class AccountDto(
     val email: String,
 )
 
+@Serializable
+data class RegisterDto(
 
+    @SerialName("email")
+    val email: String,
+
+    @SerialName("password")
+    val password: String,
+)
 
 
 

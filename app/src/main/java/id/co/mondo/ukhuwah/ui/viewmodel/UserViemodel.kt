@@ -6,11 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import id.co.mondo.ukhuwah.data.dto.UpdateUserRequestDto
 import id.co.mondo.ukhuwah.data.model.AllUsers
 import id.co.mondo.ukhuwah.data.model.InsertUpdateUser
 import id.co.mondo.ukhuwah.data.model.ListChild
 import id.co.mondo.ukhuwah.data.model.SelectUser
-import id.co.mondo.ukhuwah.data.model.UpdateUser
 import id.co.mondo.ukhuwah.data.model.User
 import id.co.mondo.ukhuwah.data.model.UserProfile
 import id.co.mondo.ukhuwah.data.supabase.AuthService
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class UserViewModel(
     private val userService: UserService = UserService(),
-    private val authService: AuthService = AuthService()
+    private val authService: AuthService = AuthService(),
 ) : ViewModel() {
 
     private val _userState = MutableStateFlow<UiState<List<AllUsers>>>(UiState.Empty)
@@ -44,13 +44,6 @@ class UserViewModel(
 
     var isRefreshing by mutableStateOf(false)
         private set
-
-    private var originalUser: User? = null
-
-    fun setOriginalUser(user: User) {
-
-        originalUser = user
-    }
 
     fun getAllUser(isRefresh: Boolean = false) {
         viewModelScope.launch {
@@ -126,15 +119,17 @@ class UserViewModel(
                 if (user.id != id) {
                     _userId.value = UiState.Error("User tidak ditemukan")
                 }
-
                 val mapUser = User(
                     id = user.id,
                     name = user.name.lowercase().replaceFirstChar { it.uppercase() },
                     fatherName = user.fatherName?.lowercase()?.replaceFirstChar { it.uppercase() },
                     nik = user.nik,
+                    kk = user.kk,
                     email = user.email,
                     phone = user.phone,
                     address = user.address.lowercase().replaceFirstChar { it.uppercase() },
+                    isExampleEmail = user.isExampleEmail,
+                    isWhitoutNik = user.isWhitoutNik,
                     children = user.children
                         ?.sortedBy { it.childNo }
                         ?.map { children ->
@@ -150,7 +145,6 @@ class UserViewModel(
                         }
                 )
                 Log.d("UserViewModel", "SUKSES Ambil data user by id: $mapUser")
-                setOriginalUser(mapUser)
                 _userId.value = UiState.Success(mapUser)
             }.onFailure {
                 Log.d("UserViewModel", "GAGAL Ambil data user by id: $it")
@@ -182,66 +176,62 @@ class UserViewModel(
     }
 
     fun updateUser(user: InsertUpdateUser) {
-        Log.d("UserViewModel", "Update user Loading...")
+
+        val currentUser = _userId.value
+
+        if (currentUser !is UiState.Success) {
+            _updateState.value = UiState.Error("Data user belum siap")
+            return
+        }
+
+        val oldUser = currentUser.data
+
+        val oldIsWhitoutNik = oldUser.isWhitoutNik == true
+        val oldIsExampleEmail = oldUser.isExampleEmail == true
+
+        val isNikChanged = user.nik != oldUser.nik
+        val isEmailChanged = user.email != oldUser.email
+
+        when {
+            oldIsWhitoutNik && oldIsExampleEmail -> {
+                if (!isNikChanged || !isEmailChanged) {
+                    _updateState.value = UiState.Error("Wajib mengisi NIK dan mengganti Email")
+                    return
+                }
+            }
+
+            oldIsExampleEmail -> {
+                if (!isEmailChanged) {
+                    _updateState.value = UiState.Error("Wajib mengganti Email")
+                    return
+                }
+            }
+        }
+
+        val updates = UpdateUserRequestDto(
+            name = user.name.lowercase().replaceFirstChar { it.uppercase() }.takeIf { it != oldUser.name },
+            fatherName = user.fatherName?.lowercase()?.replaceFirstChar { it.uppercase() }.takeIf { it != oldUser.fatherName },
+            nik = user.nik.takeIf { it != oldUser.nik },
+            email = user.email.takeIf { it != oldUser.email },
+            phone = user.phone.takeIf { it != oldUser.phone },
+            address = user.address.lowercase().replaceFirstChar { it.uppercase() }.takeIf { it != oldUser.address },
+            kk = user.kk?.takeIf { it.isNotBlank() && it != oldUser.kk },
+            isWhitoutNik = if (oldIsWhitoutNik && isNikChanged) false else null,
+            isExampleEmail = if (oldIsExampleEmail && isEmailChanged) false else null
+        )
+        Log.d("UPDATE_PAYLOAD", updates.toString())
+        if (updates == UpdateUserRequestDto()) {
+            _updateState.value = UiState.Error("Tidak ada perubahan")
+            return
+        }
+
         _updateState.value = UiState.Loading
         viewModelScope.launch {
-
-//            val isWhitoutNik = user.nik.isEmpty()
-//            val isExampleEmail = user.email.contains("@bontoulu.com")
-
-            // validasi
-//            if (isWhitoutNik && isExampleEmail) {
-//                _updateState.value = UiState.Empty
-//                _updateState.value = UiState.Error(
-//                    "Isi NIK dan ganti email dengan email yang valid"
-//                )
-//                return@launch
-//            }
-//
-//            if (isWhitoutNik) {
-//                _updateState.value = UiState.Empty
-//                _updateState.value = UiState.Error("Isi NIK terlebih dahulu")
-//                return@launch
-//            }
-//
-//            if (isExampleEmail) {
-//                _updateState.value = UiState.Empty
-//                _updateState.value = UiState.Error("Ganti email dengan email yang valid")
-//                return@launch
-//            }
-
-//            val currentUser = (userId.value as? UiState.Success)?.data
-//            val oldEmail = currentUser?.email
-
-            // 🔥 UPDATE EMAIL DI AUTH → WAJIB DITUNGGU
-//            if (oldEmail != null && user.email != oldEmail) {
-//                val authResult = authService.updateEmail(user.email)
-//                if (authResult.isFailure) {
-//                    Log.d("UserViewModel", "Gagal mengganti email: $authResult")
-//                    _updateState.value = UiState.Empty
-//                    _updateState.value = UiState.Error(
-//                        "Gagal mengganti email. Silakan coba lagi"
-//                    )
-//                    return@launch
-//                }
-//            }
-
-            val setUser = UpdateUser(
-                id = user.id,
-//                name = user.name.lowercase().replaceFirstChar { it.uppercase() },
-                fatherName = user.fatherName.lowercase().replaceFirstChar { it.uppercase() },
-//                nik = user.nik,
-//                kk = user.kk.orEmpty(),
-//                email = user.email,
-                phone = user.phone,
-                address = user.address.lowercase().replaceFirstChar { it.uppercase() },
-                isWhitoutNik = false,
-                isExampleEmail = false
-            )
-            val response = userService.updateUser(setUser)
-            response.onSuccess { user ->
-                Log.d("UserViewModel", "SUKSES Update profil User, refresh user : ${user.name}")
+            val response = userService.updateUserById(user.id, updates)
+            response.onSuccess {
+                Log.d("UserViewModel", "SUKSES Update profil User, refresh user : ${updates.name}")
                 _updateState.value = UiState.Success("Update profil sukses")
+                _updateState.value = UiState.Empty
                 val id = user.id
                 getUserById(id)
             }.onFailure {

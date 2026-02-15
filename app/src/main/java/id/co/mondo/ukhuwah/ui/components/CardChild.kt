@@ -35,7 +35,8 @@ import id.co.mondo.ukhuwah.ui.theme.Pink4
 
 @Composable
 fun CardChild(
-    child: ListChild
+    child: ListChild,
+    onClick: () -> Unit
 ) {
 
     val age = child.ageResult
@@ -48,7 +49,8 @@ fun CardChild(
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
-        )
+        ),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -146,11 +148,14 @@ fun PreviewCardChild() {
                     ageResult = AgeResult(
                         years = 1,
                         months = 2,
-                        days = 3
+                        days = 3,
+                        totalMonths = 4,
+                        monthAndDays = "5 bulan 6 hari"
                     ),
                     id = 1,
                     childNo = 1
-                )
+                ),
+                onClick = {}
 
             )
         }

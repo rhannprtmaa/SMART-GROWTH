@@ -12,8 +12,8 @@ fun calculateAgeFromBirthToMeasure(
     Log.d("calculateAge", "birth: $birth, measuredAt: $measuredAt")
 
     // 1️⃣ Cegah crash (WAJIB)
-    if (birth.isBlank() || measuredAt.isBlank()) return AgeResult(0, 0, 0)
-    if (birth == "-" || measuredAt == "-") return AgeResult(0, 0, 0)
+    if (birth.isBlank() || measuredAt.isBlank()) return AgeResult(0, 0, 0, 0, "0 bulan 0 hari")
+    if (birth == "-" || measuredAt == "-") return AgeResult(0, 0, 0, 0, "0 bulan 0 hari")
 
 
     // 2️⃣ Ambil tanggal saja (aman untuk timestamp)
@@ -23,9 +23,19 @@ fun calculateAgeFromBirthToMeasure(
     // 3️⃣ Hitung usia
     val period = Period.between(birthDate, measureDate)
 
+    val years = period.years
+    val months = period.months
+    val days = period.days
+
+    val totalMonths = (years * 12) + months
+
+    val monthAndDays = "$totalMonths bulan $days hari"
+
     return AgeResult(
         years = period.years,
         months = period.months,
-        days = period.days
+        days = period.days,
+        totalMonths = totalMonths,
+        monthAndDays = monthAndDays
     )
 }

@@ -5,10 +5,10 @@ import id.co.mondo.ukhuwah.data.dto.AllUsersDto
 import id.co.mondo.ukhuwah.data.dto.InsertUserDto
 import id.co.mondo.ukhuwah.data.dto.ProfileUserDto
 import id.co.mondo.ukhuwah.data.dto.SelectUsersDto
-import id.co.mondo.ukhuwah.data.dto.UpdateUserDto
+import id.co.mondo.ukhuwah.data.dto.UpdateUserRequestDto
 import id.co.mondo.ukhuwah.data.dto.UserDto
 import id.co.mondo.ukhuwah.data.model.RoleUser
-import id.co.mondo.ukhuwah.data.model.UpdateUser
+import id.co.mondo.ukhuwah.data.retrofit.ApiConfig
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -16,12 +16,14 @@ import io.github.jan.supabase.postgrest.query.Columns
 class UserService {
 
     private val supabase = SupabaseConfig.client
+    private val apiService = ApiConfig.getApiService()
 
-
-    suspend fun createUser(user: InsertUserDto): Result<String> {
+    suspend fun createNewUser(user: InsertUserDto): Result<String> {
         return try {
-            val result = supabase.from("users").insert(user)
-            Log.d("UserService", "Insert profile sukses: $result")
+
+            val response = apiService.Regist(user)
+            Log.d("UserService", "Insert profile sukses: $response")
+
             Result.success("Berhasil membuat User")
         } catch (e: Exception) {
             Log.e("UserService", "Insert profile GAGAL", e)
@@ -133,6 +135,7 @@ class UserService {
                 name,
                 father_name,
                 nik,
+                kk,
                 email,
                 phone,
                 address,
@@ -162,37 +165,40 @@ class UserService {
         }
     }
 
-//    ini blum fix
-    suspend fun updateUser(user: UpdateUser): Result<UpdateUserDto> {
+    //    ini blum fix
+    suspend fun updateUserById(userId: String, request: UpdateUserRequestDto): Result<String> {
 
         return try {
-            val user = supabase
-                .from("users")
-                .update(
-                    {
-//                        user.name?.let { set("name", it) }
-                        user.fatherName?.let { set("father_name", it) }
-//                        user.nik?.let { set("nik", it) }
-                        user.phone?.let { set("phone", it) }
-                        user.address?.let { set("address", it) }
-//                        user.email?.let { set("email", it) }
-                        user.isWhitoutNik.let { set("is_whitout_nik", it) }
-                        user.isExampleEmail.let { set("is_example_email", it) }
-                    }
-                ) {
-                    select()
-                    filter {
-                        eq("id_users", user.id)
-                    }
-                }
-                .decodeSingle<UpdateUserDto>()
-            Log.d("UserService", "Update user sukses: $user")
-            Result.success(user)
+            val response = apiService.UpdateUsers(userId, request)
+
+            if (response.isSuccessful) {
+                Result.success(response.body()?.msg ?: "Success")
+            } else {
+                Result.failure(Exception("Update gagal"))
+            }
         } catch (e: Exception) {
             Log.e("UserService", "Update user GAGAL", e)
             Result.failure(e)
         }
     }
+
+//    suspend fun updateUserbyId(user: UpdateUser): Result<String> {
+//
+//        return try {
+//            val
+//            val user = apiService.UpdateUsers(
+//                id =user.id,
+//                updateUser = UpdateUserbyIdDto(
+//
+//                )
+//                )
+//            Log.d("UserService", "Update user sukses: $user")
+//            Result.success("Update Profile Berhasil")
+//        } catch (e: Exception) {
+//            Log.e("UserService", "Update user GAGAL", e)
+//            Result.failure(e)
+//        }
+//    }
 
     suspend fun selectAllUsers(): Result<List<SelectUsersDto>> {
         return try {
@@ -218,7 +224,6 @@ class UserService {
             Result.failure(e)
         }
     }
-
 
 
 }

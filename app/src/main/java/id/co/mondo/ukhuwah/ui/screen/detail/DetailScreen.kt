@@ -1,7 +1,6 @@
 package id.co.mondo.ukhuwah.ui.screen.detail
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,8 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,9 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,7 +29,6 @@ import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.SelectChildren
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
-import id.co.mondo.ukhuwah.ui.theme.Pink4
 import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 
 @Composable
@@ -77,7 +71,7 @@ fun DetailScreen(
             .padding(contentPadding)
     ) {
         AppTopBar(
-            title = "Riwayat Pertumbuhan",
+            title = "Statistik Pertumbuhan",
             showBack = false
         )
         SelectChildren(
@@ -89,44 +83,6 @@ fun DetailScreen(
             children = childrenForSelect
         )
         Spacer(Modifier.height(12.dp))
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = Color.White,
-            indicator = {},
-            divider = {}
-        ) {
-            tabs.forEachIndexed { index, title ->
-                val selected = selectedTabIndex == index
-
-                Tab(
-                    selected = selected,
-                    onClick = { selectedTabIndex = index },
-                    modifier = Modifier
-                        .background(
-                            color = if (selected)
-                                Pink4
-                            else
-                                Color.White,
-                        ),
-                    text = {
-                        Text(
-                            text = title,
-                            color = if (selected)
-                                Color.Black
-                            else
-                                Color.Gray,
-                            style = if (selected) {
-                                MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            } else {
-                                MaterialTheme.typography.titleMedium
-                            }
-                        )
-                    }
-                )
-            }
-        }
         when {
             selectedChild  == -1 -> {
                 Box(
@@ -155,16 +111,16 @@ fun DetailScreen(
             measuredChildState is UiState.Success -> {
                 val child = (measuredChildState as UiState.Success).data
 
-                when (selectedTabIndex) {
-                    0 -> {
-                        StatisticContent(
-                            navController = navController,
-                            child = child
-                        )
-                    }
-
-                    1 -> GrowthContent()
-                }
+                StatisticContent(
+                    navController = navController,
+                    child = child
+                )
+//                when (selectedTabIndex) {
+//                    0 -> {
+//                    }
+//
+//                    1 -> GrowthContent()
+//                }
             }
 
             measuredChildState is UiState.Empty -> {

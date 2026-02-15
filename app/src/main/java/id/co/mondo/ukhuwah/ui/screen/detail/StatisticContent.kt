@@ -1,5 +1,6 @@
 package id.co.mondo.ukhuwah.ui.screen.detail
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,10 +44,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import id.co.mondo.ukhuwah.R
+import id.co.mondo.ukhuwah.data.model.AgeRange
 import id.co.mondo.ukhuwah.data.model.AgeResult
 import id.co.mondo.ukhuwah.data.model.AllRecipes
+import id.co.mondo.ukhuwah.data.model.ChartType
 import id.co.mondo.ukhuwah.data.model.ChildMeasure
 import id.co.mondo.ukhuwah.data.model.ChildWithMeasured
+import id.co.mondo.ukhuwah.data.model.Gender
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.BasicLineChart
@@ -62,14 +69,44 @@ fun StatisticContent(
     val viewmodel: HealthViewModel = viewModel()
     val recipeState by viewmodel.recipesState.collectAsState()
 
-//    val yearList = remember {
-//        getAvailableYears()
-//    }
-//    var selectedYear by remember { mutableStateOf(yearList.first()) }
-//    val monthList = remember(selectedYear) {
-//        getAvailableMonthsByYear(selectedYear)
-//    }
-//    var selectedMonth by remember { mutableStateOf(monthList.first()) }
+    var selectedChartIndex by remember { mutableStateOf(0) }
+//    var selectedAgeRange by remember { mutableStateOf(AgeRange.Under2Year) }
+//    var selectedGender by remember { mutableStateOf(Gender.Female) }
+
+    val gender = when(child.gender) {
+        "L" -> {
+            Gender.Male
+        }
+        "P" -> {
+            Gender.Female
+        }
+        else -> Gender.Male
+    }
+
+    Log.d("Statistic", "StatisticContent: $gender")
+
+
+    val age = when(child.ageResult.totalMonths){
+        in 0..2 -> {
+            AgeRange.Under2Year
+        }
+        in 2..12 -> {
+            AgeRange.Upper2Year
+        }
+        else -> {
+            AgeRange.Under2Year
+        }
+    }
+
+    val chartTypes = ChartType.entries.toTypedArray()
+
+    val selectedChartType = chartTypes[selectedChartIndex]
+
+    val chartData = provideChartData(
+        gender = gender,
+        chartType = selectedChartType,
+//        age = age
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -78,31 +115,6 @@ fun StatisticContent(
         contentPadding = PaddingValues(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-//        item {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 20.dp),
-//                horizontalArrangement = Arrangement.spacedBy(8.dp)
-//            ) {
-//                FilterDropdown(
-//                    selectedValue = selectedMonth,
-//                    items = monthList,
-//                    onItemSelected = {
-//                        selectedMonth = it
-//                    },
-//                    modifier = Modifier.weight(1f)
-//                )
-//                FilterDropdown(
-//                    selectedValue = selectedYear,
-//                    items = yearList,
-//                    onItemSelected = {
-//                        selectedYear = it
-//                    },
-//                    modifier = Modifier.width(150.dp)
-//                )
-//            }
-//        }
         item {
 
 
@@ -170,7 +182,9 @@ fun StatisticContent(
                         .background(color = Color.White, shape = RoundedCornerShape(12.dp))
                         .clickable(
                             onClick = {
-
+                                if (selectedChartIndex > 0) {
+                                    selectedChartIndex--
+                                }
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -184,7 +198,7 @@ fun StatisticContent(
                 }
 
                 Text(
-                    text = "Berat Badan / Tinggi Badan",
+                    text = chartData.title,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontSize = 16.sp
                     ),
@@ -198,7 +212,9 @@ fun StatisticContent(
                         .background(color = Color.White, shape = RoundedCornerShape(12.dp))
                         .clickable(
                             onClick = {
-
+                                if (selectedChartIndex < chartTypes.lastIndex) {
+                                    selectedChartIndex++
+                                }
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -213,9 +229,28 @@ fun StatisticContent(
             }
         }
         item {
+            val berat = child.measurement?.weightKg ?: 0.0
+            val tinggi = child.measurement?.heightCm ?: 0.0
+            val lingkarKepala = child.measurement?.headCm ?: 0.0
+            val usia = child.ageResult.totalMonths.toDouble()
+
+            val (childX, childY) = when (selectedChartType) {
+
+                ChartType.BB_USIA -> usia to berat
+
+                ChartType.TB_USIA -> usia to tinggi
+
+                ChartType.BB_TB -> tinggi to berat
+
+                ChartType.LK_USIA -> usia to lingkarKepala
+            }
+
             BasicLineChart(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp),
+                chartData = chartData,
+                childY = listOf(childY),
+                childX = listOf(childX)
             )
         }
         item {
@@ -322,8 +357,11 @@ fun PreviewStaticContent() {
                 ageResult = AgeResult(
                     years = 1,
                     months = 1,
-                    days = 1
+                    days = 1,
+                    totalMonths = 1,
+                    monthAndDays = "1 bulan 1 hari"
                 ),
+                gender = "L",
                 measurement = ChildMeasure(
                     id = 1,
                     measuredAt = "2023-01-01",
@@ -336,3 +374,38 @@ fun PreviewStaticContent() {
         )
     }
 }
+
+//    val yearList = remember {
+//        getAvailableYears()
+//    }
+//    var selectedYear by remember { mutableStateOf(yearList.first()) }
+//    val monthList = remember(selectedYear) {
+//        getAvailableMonthsByYear(selectedYear)
+//    }
+//    var selectedMonth by remember { mutableStateOf(monthList.first()) }
+
+//item {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 20.dp),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                FilterDropdown(
+//                    selectedValue = selectedMonth,
+//                    items = monthList,
+//                    onItemSelected = {
+//                        selectedMonth = it
+//                    },
+//                    modifier = Modifier.weight(1f)
+//                )
+//                FilterDropdown(
+//                    selectedValue = selectedYear,
+//                    items = yearList,
+//                    onItemSelected = {
+//                        selectedYear = it
+//                    },
+//                    modifier = Modifier.width(150.dp)
+//                )
+//            }
+//        }
