@@ -29,11 +29,13 @@ import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.SelectChildren
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
+import id.co.mondo.ukhuwah.ui.viewmodel.AuthViewModel
 import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 
 @Composable
 fun DetailScreen(
     navController: NavController,
+    authViewModel: AuthViewModel,
     contentPadding: PaddingValues,
 
 //    childIdFromNav: Int
@@ -44,6 +46,7 @@ fun DetailScreen(
     val measuredChildState by childViewModel.childWithMeasureState.collectAsState()
 
     val childState by childViewModel.allChildState.collectAsState()
+    val userRole by authViewModel.userRole.collectAsState()
 
 
     val tabs = listOf("Statistik", "Perjalanan")
@@ -80,7 +83,9 @@ fun DetailScreen(
                 selectedChild = id
                 childViewModel.getChildWithMeasure(id)
             },
-            children = childrenForSelect
+            children = childrenForSelect,
+            isUser = userRole == "Parent",
+            isAdmin = userRole == "Admin"
         )
         Spacer(Modifier.height(12.dp))
         when {
@@ -155,6 +160,7 @@ fun PreviewDetailScreen() {
         DetailScreen(
             navController = rememberNavController(),
             contentPadding = PaddingValues(),
+            authViewModel = viewModel()
 //            childIdFromNav = -1
         )
     }

@@ -37,11 +37,13 @@ import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.HistoryCard
 import id.co.mondo.ukhuwah.ui.components.SelectChildren
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
+import id.co.mondo.ukhuwah.ui.viewmodel.AuthViewModel
 import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 
 @Composable
 fun HistoryScreen(
     navController: NavController,
+    authViewModel: AuthViewModel,
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
@@ -51,17 +53,8 @@ fun HistoryScreen(
 
     val childState by childViewModel.allChildState.collectAsState()
 
+    val userRole by authViewModel.userRole.collectAsState()
 
-//    val yearList = remember {
-//        getAvailableYears()
-//    }
-//    var selectedYear by remember { mutableStateOf(yearList.first()) }
-//    val monthList = remember(selectedYear) {
-//        getAvailableMonthsByYear(selectedYear)
-//    }
-//    var selectedMonth by remember { mutableStateOf(monthList.first()) }
-//
-//
     var selectedChild by remember { mutableStateOf(-1) }
 
 
@@ -88,41 +81,23 @@ fun HistoryScreen(
     ) {
         AppTopBar(
             title = "Riwayat Pertumbuhan",
-            showBack = false
+            showBack = false,
+            showSearch = if (userRole == "Admin"){
+                true
+            }else{
+                false
+            }
         )
         SelectChildren(
             selectedChild = selectedChildName,
             onChildSelected = {
                 selectedChild = it
             },
-            children = childrenForSelect
+            children = childrenForSelect,
+            isUser = userRole == "Parent",
+            isAdmin = userRole == "Admin"
         )
         Spacer(Modifier.height(12.dp))
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 20.dp),
-//            horizontalArrangement = Arrangement.spacedBy(8.dp)
-//        ) {
-//            FilterDropdown(
-//                selectedValue = selectedMonth,
-//                items = monthList,
-//                onItemSelected = {
-//                    selectedMonth = it
-//                },
-//                modifier = Modifier.weight(1f)
-//            )
-//            FilterDropdown(
-//                selectedValue = selectedYear,
-//                items = yearList,
-//                onItemSelected = {
-//                    selectedYear = it
-//                },
-//                modifier = Modifier.width(150.dp)
-//            )
-//        }
-//        Spacer(Modifier.height(12.dp))
-
         when (measureWithChildState) {
             is UiState.Loading -> {
                 Box(
@@ -205,7 +180,8 @@ fun PreviewHistoryScreen() {
     Innovillage6thTheme {
         HistoryScreen(
             navController = rememberNavController(),
-            contentPadding = PaddingValues()
+            contentPadding = PaddingValues(),
+            authViewModel = viewModel()
         )
     }
 }

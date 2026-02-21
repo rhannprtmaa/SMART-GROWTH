@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -92,7 +93,7 @@ fun NewMeasureChildrenScreen(
     }
 
     LaunchedEffect(insertNewMeasureState) {
-        when(insertNewMeasureState) {
+        when (insertNewMeasureState) {
             is UiState.Success -> {
                 Toast.makeText(
                     context,
@@ -106,6 +107,7 @@ fun NewMeasureChildrenScreen(
                 lk = ""
                 lila = ""
             }
+
             is UiState.Error -> {
                 Toast.makeText(
                     context,
@@ -113,6 +115,7 @@ fun NewMeasureChildrenScreen(
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
             else -> Unit
 
         }
@@ -145,7 +148,8 @@ fun NewMeasureChildrenScreen(
     val filteredUsers = if (searchQuery.isBlank()) {
         userList
     } else {
-        userList.filter { it.name.contains(searchQuery, ignoreCase = true)
+        userList.filter {
+            it.name.contains(searchQuery, ignoreCase = true)
         }
     }
 
@@ -164,7 +168,7 @@ fun NewMeasureChildrenScreen(
                 .fillMaxSize()
         ) {
             AppTopBar(
-                title = "Update Pertumbuhan Anak",
+                title = "Tambah data pertumbuhan",
                 showBack = true,
                 onBackClick = {
                     if (isSearchMode) {
@@ -454,8 +458,8 @@ fun NewMeasureChildrenScreen(
 
                     if (filteredUsers.isNotEmpty()) {
                         OutlinedCard {
-                            Column {
-                                filteredUsers.forEach { user ->
+                            LazyColumn(Modifier.fillMaxWidth()) {
+                                items(filteredUsers) { user ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -472,7 +476,7 @@ fun NewMeasureChildrenScreen(
                                             verticalArrangement = Arrangement.spacedBy(2.dp)
                                         ) {
                                             Text(
-                                                text = user.name ?: "-",
+                                                text = user.name,
                                                 style = MaterialTheme.typography.titleMedium,
                                                 color = Color.DarkGray
                                             )

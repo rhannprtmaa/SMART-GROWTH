@@ -159,7 +159,7 @@ class UserViewModel(
         viewModelScope.launch {
             val response = userService.selectAllUsers()
             response.onSuccess { data ->
-                val user = data.map {
+                val user = data.sortedByDescending { it.id }.map {
                     SelectUser(
                         id = it.id,
                         name = it.name.lowercase().replaceFirstChar { it.uppercase() },

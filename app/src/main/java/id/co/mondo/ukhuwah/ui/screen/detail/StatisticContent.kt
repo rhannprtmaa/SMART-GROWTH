@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +45,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import id.co.mondo.ukhuwah.R
-import id.co.mondo.ukhuwah.data.model.AgeRange
 import id.co.mondo.ukhuwah.data.model.AgeResult
 import id.co.mondo.ukhuwah.data.model.AllRecipes
 import id.co.mondo.ukhuwah.data.model.ChartType
@@ -56,6 +56,7 @@ import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.BasicLineChart
 import id.co.mondo.ukhuwah.ui.components.DetailItemCard
 import id.co.mondo.ukhuwah.ui.components.MpasiItemCard
+import id.co.mondo.ukhuwah.ui.components.getGrowthStatus
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
 import id.co.mondo.ukhuwah.ui.viewmodel.HealthViewModel
@@ -70,33 +71,20 @@ fun StatisticContent(
     val recipeState by viewmodel.recipesState.collectAsState()
 
     var selectedChartIndex by remember { mutableStateOf(0) }
-//    var selectedAgeRange by remember { mutableStateOf(AgeRange.Under2Year) }
-//    var selectedGender by remember { mutableStateOf(Gender.Female) }
 
-    val gender = when(child.gender) {
+    val gender = when (child.gender) {
         "L" -> {
             Gender.Male
         }
+
         "P" -> {
             Gender.Female
         }
+
         else -> Gender.Male
     }
 
     Log.d("Statistic", "StatisticContent: $gender")
-
-
-    val age = when(child.ageResult.totalMonths){
-        in 0..2 -> {
-            AgeRange.Under2Year
-        }
-        in 2..12 -> {
-            AgeRange.Upper2Year
-        }
-        else -> {
-            AgeRange.Under2Year
-        }
-    }
 
     val chartTypes = ChartType.entries.toTypedArray()
 
@@ -105,7 +93,6 @@ fun StatisticContent(
     val chartData = provideChartData(
         gender = gender,
         chartType = selectedChartType,
-//        age = age
     )
 
     LazyColumn(
@@ -245,6 +232,13 @@ fun StatisticContent(
                 ChartType.LK_USIA -> usia to lingkarKepala
             }
 
+            val growthStatus = getGrowthStatus(
+                chartData = chartData,
+                chartType = selectedChartType,
+                childX = childX,
+                childY = childY
+            )
+
             BasicLineChart(
                 modifier = Modifier
                     .padding(horizontal = 20.dp),
@@ -252,8 +246,7 @@ fun StatisticContent(
                 childY = listOf(childY),
                 childX = listOf(childX)
             )
-        }
-        item {
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -282,13 +275,13 @@ fun StatisticContent(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Berat Normal",
+                            text = growthStatus.title,
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White
                         )
                     }
                     Text(
-                        text = "Berat Badan Anak sesuai usia. Lihat kurva BB/TB untuk menilai status gizi anak lebih akurat, dan pantau ulang berat badan dan tinggi badan secara berkala",
+                        text = growthStatus.description,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Black,
                     )

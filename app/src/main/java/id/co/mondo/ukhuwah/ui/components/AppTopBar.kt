@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,23 +60,13 @@ fun AppTopBar(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = 16.sp
+                fontSize = 12.sp
             ),
             modifier = Modifier.align(Alignment.Center)
         )
 
         if (showSearch){
-            IconButton(
-                onClick = {
-                    onSearchClick()
-                },
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
-                )
-            }
+
         }
         if (showEdit){
             Text(

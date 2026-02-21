@@ -65,7 +65,7 @@ class ChildViewModel(
         viewModelScope.launch {
             val response = childService.getAllChild()
             response.onSuccess { list ->
-                val response = list.map { child ->
+                val response = list.sortedByDescending { it.id }.map { child ->
                     AllChild(
                         id = child.id,
                         name = child.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -121,9 +121,9 @@ class ChildViewModel(
                     nik = child.nik.orEmpty(),
                     gender = child.gender,
                     birth = child.birth,
-                    heightCm = child.heightCm,
-                    weightKg = child.weightKg,
-                    headCm = child.headCm
+                    heightCm = child.heightCm ?: 0.0,
+                    weightKg = child.weightKg ?: 0.0,
+                    headCm = child.headCm ?: 0.0
                 )
                 Log.d("UserViewModel", "Get child by Id sukses: $setChild")
                 _childId.value = UiState.Success(setChild)
@@ -196,7 +196,7 @@ class ChildViewModel(
                         )
                         ListMeasure(
                             childrenId = children.id,
-                            name = children.name,
+                            name = children.name.lowercase().replaceFirstChar { it.uppercase() },
                             measureId = measure.id,
                             measuredAt = measure.measuredAt,
                             ageResult = ageResult,

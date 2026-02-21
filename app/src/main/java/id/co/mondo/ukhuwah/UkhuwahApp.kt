@@ -125,12 +125,14 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
                 DetailScreen(
                     navController = navController,
                     contentPadding = innerPadding,
+                    authViewModel = authViewModel
                 )
             }
             composable("history") {
                 HistoryScreen(
                     navController = navController,
-                    contentPadding = innerPadding
+                    contentPadding = innerPadding,
+                    authViewModel = authViewModel
                 )
             }
             composable("health") {
