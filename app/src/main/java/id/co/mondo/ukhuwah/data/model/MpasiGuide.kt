@@ -1,8 +1,10 @@
 package id.co.mondo.ukhuwah.data.model
 
+import id.co.mondo.ukhuwah.R
+
 data class MpasiGuide(
     val id: Int,
-    val url: String,
+    val url: Int,
     val title: String,
     val fase: String,
     val desc: String,
@@ -21,7 +23,7 @@ data class Guide(
 val MpasiGuideList = listOf(
     MpasiGuide(
         id = 1,
-        url = "",
+        url = R.drawable.disaring,
         title = "Bayi 6 - 8 Bulan",
         fase = "FASE DISARING",
         desc = "Makanan dibuat dengan disaring Tekstur makanan lumat dan kental",
@@ -35,7 +37,7 @@ val MpasiGuideList = listOf(
     ),
     MpasiGuide(
         id = 2,
-        url = "",
+        url = R.drawable.dicincang,
         title = "Bayi 9 - 11 Bulan",
         fase = "FASE DICINCANG",
         desc = "Bahan makanan sama dengan untuk orang dewasa. Tekstur makanan dicincang. Perhatikan respons anak saat makan",
@@ -49,7 +51,7 @@ val MpasiGuideList = listOf(
     ),
     MpasiGuide(
         id = 3,
-        url = "",
+        url = R.drawable.biasa,
         title = "Bayi 12 - 23 Bulan",
         fase = "MASAKAN BIASA",
         desc = "Bahan makanan sama dengan untuk orang dewasa. Tekstur makanan yang diiris-iris. Perhatikan respons anak saat makan.",
