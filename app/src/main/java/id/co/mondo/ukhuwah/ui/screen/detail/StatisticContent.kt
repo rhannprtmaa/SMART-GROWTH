@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +69,7 @@ fun StatisticContent(
 ) {
 
     val viewmodel: HealthViewModel = viewModel()
-    val recipeState by viewmodel.recipesState.collectAsState()
+    val recipeState by viewmodel.recipesAgeState.collectAsState()
 
     var selectedChartIndex by remember { mutableStateOf(0) }
 
@@ -83,6 +84,11 @@ fun StatisticContent(
 
         else -> Gender.Male
     }
+
+    LaunchedEffect(child) {
+        viewmodel.getALlRecipesByAge(child.ageResult.totalMonths)
+    }
+
 
     Log.d("Statistic", "StatisticContent: $gender")
 
@@ -116,11 +122,9 @@ fun StatisticContent(
                 DetailItemCard(
                     painter = painterResource(R.drawable.babyface),
                     title = "Usia anak",
-                    value = "${child.ageResult.years} Tahun " +
-                            "${child.ageResult.months} Bulan " +
-                            "${child.ageResult.days} Hari",
+                    value = child.ageResult.monthAndDays,
                     sizeFont = 18,
-                    modifier = Modifier.size(height = 130.dp, width = 250.dp)
+                    modifier = Modifier.size(height = 130.dp, width = 225.dp)
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     DetailItemCard(
@@ -288,50 +292,100 @@ fun StatisticContent(
                 }
             }
         }
-        item {
 
-            AppTopBar(
-                title = "Rekomendasi Makanan",
-                showBack = false,
-                modifier = Modifier.background(Color.White)
-            )
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "Lihat Semua",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        textDecoration = TextDecoration.Underline
-                    ),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable {
-                        navController.navigate("health")
-                    }
-                )
-            }
-        }
         if (recipeState is UiState.Success) {
             val recipes = (recipeState as UiState.Success<List<AllRecipes>>).data
-            items(recipes.take(4)) { mpasi ->
-                MpasiItemCard(
-                    navController = navController,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    fontTitle = MaterialTheme.typography.titleMedium.copy(
-                        lineHeight = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    fontBody = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 12.sp
-                    ),
-                    item = mpasi
-                )
+            if (recipes.isNotEmpty()) {
+                item {
+                    AppTopBar(
+                        title = "Rekomendasi Makanan",
+                        showBack = false,
+                        modifier = Modifier.background(Color.White)
+                    )
+                }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "Lihat Semua",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                textDecoration = TextDecoration.Underline
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable {
+                                navController.navigate("health")
+                            }
+                        )
+                    }
+                }
+                items(recipes) { mpasi ->
+                    MpasiItemCard(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        fontTitle = MaterialTheme.typography.titleMedium.copy(
+                            lineHeight = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        fontBody = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 12.sp
+                        ),
+                        item = mpasi
+                    )
+                }
+            } else {
+                item {
+                    AppTopBar(
+                        title = "Rekomendasi",
+                        showBack = false,
+                        modifier = Modifier.background(Color.White)
+                    )
+                }
+                item {
+                    OutlinedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .padding(horizontal = 32.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        shape = RoundedCornerShape(12.dp)
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Bayi usia 0–5 bulan cukup ASI eksklusif",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 12.sp
+                                    ),
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+
             }
         }
 

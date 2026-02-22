@@ -21,6 +21,9 @@ class HealthViewModel : ViewModel() {
     private val _recipesState = MutableStateFlow<UiState<List<AllRecipes>>>(UiState.Empty)
     val recipesState: StateFlow<UiState<List<AllRecipes>>> = _recipesState
 
+    private val _recipesAgeState = MutableStateFlow<UiState<List<AllRecipes>>>(UiState.Empty)
+    val recipesAgeState: StateFlow<UiState<List<AllRecipes>>> = _recipesAgeState
+
     init {
         getALlRecipes()
     }
@@ -46,6 +49,39 @@ class HealthViewModel : ViewModel() {
                 .onFailure {
                     Log.d("HealthViewModel", "getALlRecipes: $it")
                     _recipesState.value = UiState.Error("Gagal mendapatkan data")
+                }
+        }
+    }
+
+    fun getALlRecipesByAge(month: Int) {
+        _recipesAgeState.value = UiState.Loading
+
+        viewModelScope.launch {
+            val response = HealthService().getAllRecipes()
+            response.onSuccess { list ->
+                val filtered = when {
+                    month in 0..5 -> emptyList()
+                    month in 6..8 -> list.filter { it.age == "6 - 8 Bulan" }
+                    month in 9..11 -> list.filter { it.age == "9 - 11 Bulan" }
+                    month >= 12 -> list.filter { it.age == "12 - 23 Bulan" }
+                    else -> emptyList()
+                }
+
+                val response = filtered.map { dto ->
+                    AllRecipes(
+                        id = dto.id,
+                        image = dto.image,
+                        title = dto.title,
+                        age = dto.age
+                    )
+
+                }
+                Log.d("HealthViewModel", "getALlRecipes: $response")
+                _recipesAgeState.value = UiState.Success(response)
+            }
+                .onFailure {
+                    Log.d("HealthViewModel", "getALlRecipes: $it")
+                    _recipesAgeState.value = UiState.Error("Gagal mendapatkan data")
                 }
         }
     }
