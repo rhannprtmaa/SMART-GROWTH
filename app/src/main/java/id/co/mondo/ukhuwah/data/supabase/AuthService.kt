@@ -23,15 +23,13 @@ class AuthService {
     }
 
 
-    suspend fun updateEmail(email: String): Result<Unit> {
+    suspend fun forgotPassword(email: String): Result<Unit> {
         return try {
-            supabase.auth.updateUser {
-                this.email = email
-            }
-            Log.d("AuthService", "Update email berhasil")
+            supabase.auth.resetPasswordForEmail(email)
+            Log.d("AuthService", "Send Otp reset password via email berhasil")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("AuthService", "Update email GAGAL: ${e.message}", e)
+            Log.e("AuthService", "Send Otp reset password via email GAGAL: ${e.message}", e)
             Result.failure(e)
         }
     }

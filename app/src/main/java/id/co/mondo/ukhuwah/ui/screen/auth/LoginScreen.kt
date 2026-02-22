@@ -2,9 +2,11 @@ package id.co.mondo.ukhuwah.ui.screen.auth
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import id.co.mondo.ukhuwah.ui.common.UiState
 import id.co.mondo.ukhuwah.ui.components.ButtonCustom
 import id.co.mondo.ukhuwah.ui.components.TextFieldCustom
@@ -38,7 +42,7 @@ import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen( viewModel: AuthViewModel) {
+fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
 
     val context = LocalContext.current
 
@@ -61,13 +65,15 @@ fun LoginScreen( viewModel: AuthViewModel) {
                 )
             }
         }
+
         is UiState.Error -> {
-                Toast.makeText(
-                    context,
-                    (loginState as UiState.Error).message,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            Toast.makeText(
+                context,
+                (loginState as UiState.Error).message,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
         else -> Unit
     }
 
@@ -101,7 +107,7 @@ fun LoginScreen( viewModel: AuthViewModel) {
                 values = email,
                 label = "Email atau Username",
                 onValueChange = {
-                   email = it
+                    email = it
                 },
                 keyboardType = KeyboardType.Email,
             )
@@ -128,16 +134,36 @@ fun LoginScreen( viewModel: AuthViewModel) {
                 } else null
             )
         }
+        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = "Lupa Password",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    textDecoration = TextDecoration.Underline
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable {
+                    navController.navigate("forgot-password")
+
+                }
+            )
+        }
         Spacer(Modifier.height(32.dp))
         ButtonCustom(
             modifier = Modifier.fillMaxWidth(),
             label = "Masuk",
             onClick = {
                 Log.d("LOGIN", "Button clicked")
-                viewModel.login(
-                    inputEmailOrUsername = email,
-                    password = password
-                )
+//                viewModel.login(
+//                    inputEmailOrUsername = email,
+//                    password = password
+//                )
+                Toast.makeText(context, "Dalam Pengembangan", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -149,6 +175,9 @@ fun LoginScreen( viewModel: AuthViewModel) {
 @Composable
 fun PreviewLoginScreen() {
     Innovillage6thTheme {
-        LoginScreen( viewModel = viewModel())
+        LoginScreen(
+            viewModel = viewModel(),
+            navController = NavController(LocalContext.current)
+        )
     }
 }

@@ -19,6 +19,7 @@ import id.co.mondo.ukhuwah.ui.screen.HomeParentScreen
 import id.co.mondo.ukhuwah.ui.screen.HomeScreen
 import id.co.mondo.ukhuwah.ui.screen.NotificationScreen
 import id.co.mondo.ukhuwah.ui.screen.ProfileScreen
+import id.co.mondo.ukhuwah.ui.screen.auth.ForgotPasswordScreen
 import id.co.mondo.ukhuwah.ui.screen.auth.LoginScreen
 import id.co.mondo.ukhuwah.ui.screen.auth.RegisterScreen
 import id.co.mondo.ukhuwah.ui.screen.detail.DetailScreen
@@ -52,13 +53,15 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
 
     val isCheckingSession by authViewModel.isCheckingSession.collectAsState()
 
+    val authFreeRoutes = listOf("login", "forgot-password")
+
     LaunchedEffect(isLoggedIn, userRole, isCheckingSession, currentRoute) {
         if (isCheckingSession) {
             return@LaunchedEffect
         }
 
         if (!isLoggedIn) {
-            if (currentRoute != "login") {
+            if (currentRoute !in authFreeRoutes) {
                 navController.navigate("login") {
                     popUpTo(0) { inclusive = true }
                 }
@@ -111,7 +114,10 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
             ) {
 //            Auth
             composable("login") {
-                LoginScreen(authViewModel)
+                LoginScreen(
+                    viewModel = authViewModel,
+                    navController = navController
+                )
             }
             composable("register") {
                 RegisterScreen(
@@ -162,6 +168,9 @@ fun UkhuwahApp(authViewModel: AuthViewModel) {
                     contentPadding = innerPadding,
                     id = id ?: 0
                 )
+            }
+            composable("forgot-password") {
+                ForgotPasswordScreen(authViewModel)
             }
 //            Parent
             composable("home_parent") {
