@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import id.co.mondo.ukhuwah.data.dto.ChildWithMeasureDto
+import id.co.mondo.ukhuwah.data.dto.InsertMeasureAiDto
 import id.co.mondo.ukhuwah.data.dto.InsertNewChildDto
 import id.co.mondo.ukhuwah.data.model.AllChild
 import id.co.mondo.ukhuwah.data.model.ChildMeasure
@@ -14,6 +15,8 @@ import id.co.mondo.ukhuwah.data.model.ListMeasure
 import id.co.mondo.ukhuwah.data.model.NewMeasure
 import id.co.mondo.ukhuwah.data.model.ProfileChild
 import id.co.mondo.ukhuwah.data.model.UpdateProfileChild
+import id.co.mondo.ukhuwah.data.model.insertRekomendasiAi
+import id.co.mondo.ukhuwah.data.model.resultRekomendasiAi
 import id.co.mondo.ukhuwah.data.supabase.ChildService
 import id.co.mondo.ukhuwah.data.utils.calculateAgeFromBirthToMeasure
 import id.co.mondo.ukhuwah.ui.common.UiState
@@ -51,6 +54,9 @@ class ChildViewModel(
 
     private val _updateChildId = MutableStateFlow<UiState<String>>(UiState.Empty)
     val updateChildId: StateFlow<UiState<String>> = _updateChildId
+
+    private val _rekomenadisiAi = MutableStateFlow<UiState<resultRekomendasiAi>>(UiState.Empty)
+    val rekomendasiAiState: StateFlow<UiState<resultRekomendasiAi>> = _rekomenadisiAi
 
 
     private var rawChild: ChildWithMeasureDto? = null
@@ -282,6 +288,32 @@ class ChildViewModel(
             }.onFailure {
                 Log.d("ChildViewModel", "Update profil children GAGAL: $it")
                 _updateChildId.value = UiState.Error("Gagal update profil")
+            }
+        }
+    }
+
+    fun getRekomendasiAi(insert: insertRekomendasiAi){
+        _rekomenadisiAi.value = UiState.Loading
+        viewModelScope.launch {
+            val setInsert = InsertMeasureAiDto(
+                sex = insert.sex,
+                age = insert.age,
+                height = insert.height,
+                weight = insert.weight
+            )
+            val response = childService.recommendationAi(setInsert)
+            response.onSuccess { data ->
+                val result = resultRekomendasiAi(
+                    ttAge = data.diagnosis.heightPerAge,
+                    bbAge = data.diagnosis.weightPerAge,
+                    bbTt = data.diagnosis.heightPerWeight,
+                    desc = data.desc
+                )
+                Log.d("ChildViewModel", "Get Rekomendasi Ai by Measure sukses: $result")
+                _rekomenadisiAi.value = UiState.Success(result)
+            }.onFailure {
+                Log.d("ChildViewModel", "Get Rekomendasi Ai by Measure GAGAL: $it")
+                _rekomenadisiAi.value = UiState.Error("Gagal mendapatkan data")
             }
         }
     }

@@ -5,16 +5,20 @@ import id.co.mondo.ukhuwah.data.dto.AllChildDto
 import id.co.mondo.ukhuwah.data.dto.ChildDto
 import id.co.mondo.ukhuwah.data.dto.ChildWithMeasureDto
 import id.co.mondo.ukhuwah.data.dto.CountChildWithMeasureDto
+import id.co.mondo.ukhuwah.data.dto.InsertMeasureAiDto
 import id.co.mondo.ukhuwah.data.dto.InsertNewChildDto
 import id.co.mondo.ukhuwah.data.dto.UpdateChildDto
 import id.co.mondo.ukhuwah.data.model.NewMeasure
 import id.co.mondo.ukhuwah.data.model.UpdateProfileChild
+import id.co.mondo.ukhuwah.data.retrofit.ApiConfig
+import id.co.mondo.ukhuwah.data.retrofit.response.RecomendasiAiResponse
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 
 class ChildService {
 
     private val supabase = SupabaseConfig.client
+    private val AiApiService = ApiConfig.getAiApiService()
 
     suspend fun getAllChild(): Result<List<AllChildDto>> {
         return try {
@@ -210,6 +214,29 @@ class ChildService {
             Result.success(setChild)
         } catch (e: Exception) {
             Log.e("UserService", "Update child GAGAL", e)
+            Result.failure(e)
+        }
+    }
+
+
+    suspend fun recommendationAi(insert: InsertMeasureAiDto): Result<RecomendasiAiResponse>{
+        return try {
+            val response = AiApiService.RekomendasiAi(insert)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    Log.d("ChildService", "Rekomendasi AI sukses: $body")
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception("Response body is null"))
+                }
+            } else {
+                Result.failure(Exception("Error: ${response.code()} ${response.message()}"))
+            }
+
+        } catch (e: Exception) {
+            Log.e("ChildService", "Rekomendasi AI GAGAL", e)
             Result.failure(e)
         }
     }

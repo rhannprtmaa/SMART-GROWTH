@@ -112,4 +112,8 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
+//    MarkDown
+//    implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.17.0")
+//    implementation("com.halilibo.compose-richtext:richtext-markdown:0.17.0")
+
 }

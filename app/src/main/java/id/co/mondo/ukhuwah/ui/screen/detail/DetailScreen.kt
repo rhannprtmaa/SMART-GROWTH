@@ -52,10 +52,6 @@ fun DetailScreen(
     val tabs = listOf("Statistik", "Perjalanan")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
-
-
-
-
     var selectedChild by remember { mutableStateOf(-1) }
 
     val childrenForSelect = when (childState) {

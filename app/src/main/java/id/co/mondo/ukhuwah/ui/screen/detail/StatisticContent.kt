@@ -20,7 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -35,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +46,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -52,7 +57,9 @@ import id.co.mondo.ukhuwah.data.model.ChartType
 import id.co.mondo.ukhuwah.data.model.ChildMeasure
 import id.co.mondo.ukhuwah.data.model.ChildWithMeasured
 import id.co.mondo.ukhuwah.data.model.Gender
+import id.co.mondo.ukhuwah.data.model.insertRekomendasiAi
 import id.co.mondo.ukhuwah.ui.common.UiState
+import id.co.mondo.ukhuwah.ui.components.AiRecommendationText
 import id.co.mondo.ukhuwah.ui.components.AppTopBar
 import id.co.mondo.ukhuwah.ui.components.BasicLineChart
 import id.co.mondo.ukhuwah.ui.components.DetailItemCard
@@ -60,6 +67,7 @@ import id.co.mondo.ukhuwah.ui.components.MpasiItemCard
 import id.co.mondo.ukhuwah.ui.components.getGrowthStatus
 import id.co.mondo.ukhuwah.ui.theme.Innovillage6thTheme
 import id.co.mondo.ukhuwah.ui.theme.Pink4
+import id.co.mondo.ukhuwah.ui.viewmodel.ChildViewModel
 import id.co.mondo.ukhuwah.ui.viewmodel.HealthViewModel
 
 @Composable
@@ -68,10 +76,20 @@ fun StatisticContent(
     child: ChildWithMeasured
 ) {
 
+    val context = LocalContext.current
+
     val viewmodel: HealthViewModel = viewModel()
+    val childViewModel: ChildViewModel = viewModel()
+
+
     val recipeState by viewmodel.recipesAgeState.collectAsState()
 
+    val rekomendasiAiState by childViewModel.rekomendasiAiState.collectAsState()
+
+
     var selectedChartIndex by remember { mutableStateOf(0) }
+
+    var showDialog by remember { mutableStateOf(false) }
 
     val gender = when (child.gender) {
         "L" -> {
@@ -90,6 +108,8 @@ fun StatisticContent(
     }
 
 
+
+
     Log.d("Statistic", "StatisticContent: $gender")
 
     val chartTypes = ChartType.entries.toTypedArray()
@@ -100,6 +120,134 @@ fun StatisticContent(
         gender = gender,
         chartType = selectedChartType,
     )
+
+    if (showDialog) {
+        Dialog(
+            onDismissRequest = {
+                showDialog = false
+            }
+        ) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+                    .padding(16.dp)
+            ) {
+                when (val state = rekomendasiAiState) {
+                    is UiState.Success -> {
+                        val data = state.data
+
+                        LazyColumn(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+
+                            item {
+                                Text(
+                                    text = "Hasil Analisis Gizi",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontSize = 16.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+
+                            item {
+                                Divider()
+                            }
+
+                            // 🔹 Diagnosis Section
+                            item {
+                                Text(
+                                    text = "Diagnosis",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontSize = 14.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+
+                            item {
+                                Text(
+                                    text = "TB/U : ${data.ttAge}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 10.sp
+                                    ),
+                                )
+                                Text(
+                                    text = "BB/U : ${data.bbAge}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 10.sp
+                                    )
+                                )
+                                Text(
+                                    text = "BB/TB : ${data.bbTt}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                            item {
+                                Divider()
+                            }
+                            item {
+                                Text(
+                                    text = "Rekomendasi",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontSize = 14.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+
+                            item {
+                                AiRecommendationText(data.desc)
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                    }
+
+                    is UiState.Error -> {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = state.message,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+
+                    is UiState.Loading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
+
+                    is UiState.Empty -> {
+                        Box(
+                            modifier = Modifier.padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Belum ada data")
+                        }
+                    }
+                }
+            }
+
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -258,7 +406,18 @@ fun StatisticContent(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
-                )
+                ),
+                onClick = {
+                    showDialog = true
+                    childViewModel.getRekomendasiAi(
+                        insert = insertRekomendasiAi(
+                            sex = if (child.gender == "L") 1 else 0,
+                            age = child.ageResult.totalMonths,
+                            height = child.measurement?.heightCm ?: 0.0,
+                            weight = child.measurement?.weightKg ?: 0.0
+                        )
+                    )
+                }
             ) {
                 Column(
                     modifier = Modifier

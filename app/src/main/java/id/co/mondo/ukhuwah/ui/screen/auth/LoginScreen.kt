@@ -148,7 +148,8 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
                 ),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable {
-                    navController.navigate("forgot-password")
+//                    navController.navigate("forgot-password")
+                    Toast.makeText(context, "Dalam Pengembangan", Toast.LENGTH_SHORT).show()
 
                 }
             )
@@ -159,11 +160,11 @@ fun LoginScreen(viewModel: AuthViewModel, navController: NavController) {
             label = "Masuk",
             onClick = {
                 Log.d("LOGIN", "Button clicked")
-//                viewModel.login(
-//                    inputEmailOrUsername = email,
-//                    password = password
-//                )
-                Toast.makeText(context, "Dalam Pengembangan", Toast.LENGTH_SHORT).show()
+                viewModel.login(
+                    inputEmailOrUsername = email,
+                    password = password
+                )
+
             }
         )
     }
