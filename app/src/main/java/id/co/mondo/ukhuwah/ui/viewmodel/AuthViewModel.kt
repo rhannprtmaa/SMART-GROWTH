@@ -80,7 +80,6 @@ class AuthViewModel(
         }
     }
 
-
     fun login(inputEmailOrUsername: String, password: String) {
         Log.d("Login", "inputEmailOrUsername: $inputEmailOrUsername")
         _loginState.value = UiState.Loading
@@ -104,17 +103,15 @@ class AuthViewModel(
                 loadUserRole()
                 _isLoggedIn.value = true
                 _loginState.value = UiState.Success("Login Berhasil")
-            }.onFailure {
-                val errorMessage =
-                    if (it.message?.contains("invalid", true) == true) {
-                        "Email atau kata sandi salah"
-                    } else {
-                        "Login gagal, silakan coba lagi"
-                    }
-                Log.d("Login", "Login gagal $emailOrUsername : $it")
+            }.onFailure { error ->
+                Log.e("LOGIN_ERROR", "Login gagal", error)
+
+                val errorMessage = error.message
+                    ?: error.cause?.message
+                    ?: "Terjadi kesalahan yang tidak diketahui"
+
                 _isLoggedIn.value = false
                 _loginState.value = UiState.Error(errorMessage)
-
             }
         }
     }
