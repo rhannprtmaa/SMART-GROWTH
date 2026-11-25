@@ -1,0 +1,67 @@
+package id.co.raihan.smartgrowth.data.model
+
+import androidx.compose.ui.graphics.Color
+import id.co.raihan.smartgrowth.R
+import id.co.raihan.smartgrowth.ui.theme.bakunparent
+import id.co.raihan.smartgrowth.ui.theme.inkes
+import id.co.raihan.smartgrowth.ui.theme.jalper
+import id.co.raihan.smartgrowth.ui.theme.statper
+import id.co.raihan.smartgrowth.ui.theme.tpanak
+
+data class MenuItem(
+    val title: String,
+    val icon: Int,
+    val color: Color,
+    val routes: String
+)
+
+
+val menuItemsKader = listOf(
+    MenuItem(
+        title = "Statistik Pertumbuhan",
+        icon = R.drawable.statistik,
+        color = statper,
+        routes = "detail"
+    ),
+    MenuItem(
+        title = "Perjalanan Pertumbuhan",
+        icon = R.drawable.babyfeet,
+        color = jalper,
+        routes = "detail"
+    ),MenuItem(
+        title = "Informasi Kesehatan",
+        icon = R.drawable.openbook,
+        color = inkes,
+        routes = "health"
+    ),MenuItem(
+        title = "Tambah Profile Anak",
+        icon = R.drawable.children,
+        color = tpanak,
+        routes = "add-children"
+    ),MenuItem(
+        title = "Buat Akun Orang Tua",
+        icon = R.drawable.family,
+        color = bakunparent,
+        routes = "register"
+    )
+)
+
+val menuItemsParent = listOf(
+    MenuItem(
+        title = "Statistik Pertumbuhan",
+        icon = R.drawable.statistik,
+        color = statper,
+        routes = "detail"
+    ),
+    MenuItem(
+        title = "Perjalanan Pertumbuhan",
+        icon = R.drawable.babyfeet,
+        color = jalper,
+        routes = "detail"
+    ),MenuItem(
+        title = "Informasi Kesehatan",
+        icon = R.drawable.openbook,
+        color = inkes,
+        routes = "health"
+    )
+)

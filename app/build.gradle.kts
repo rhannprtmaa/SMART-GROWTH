@@ -15,7 +15,7 @@ if (localPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "id.co.mondo.ukhuwah"
+    namespace = "id.co.raihan.smartgrowth"
     compileSdk = 36
 
     defaultConfig {
